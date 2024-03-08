@@ -21,8 +21,8 @@ object Parser extends IOApp:
   val program = for {
     lines <- readFromRawData(dataPath)
     chorals <- extractChorals(lines)
-    metadata <- processMetadata(chorals)
-    model <- processModel(chorals)
+//    metadata <- processMetadata(chorals)
+//    model <- processModel(chorals)
     _ <- IO.println(s"${chorals.size} chorals parsed successfully")
   } yield ExitCode.Success
 
@@ -36,11 +36,12 @@ object Parser extends IOApp:
   def extractChorals(lines: Vector[String]): IO[Vector[Choral]] =
     val chorals: Vector[Choral] = lines.map(line =>
       val (metadata,chords) = line match { case chordMetadataSplitter(m,c) => (m,c) }
+      val metadataArray = metadata.split(",")
 
       //Checker for chord annotation errors
       val wrongChords = chords.split(",|;").find(!chordRegex.matches(_))
       if wrongChords.isDefined then
-      throw new NumberFormatException(s"Not valid chord symbol ${wrongChords.get} at choral ${metadata.takeWhile(!_.equals(',')).drop(1)}")
+      throw new NumberFormatException(s"Not valid chord symbol ${wrongChords.get} at choral ${metadataArray(0)}")
 
       val semiphrases: Vector[Semiphrase] = chords.split(";").map(_.split(",").map(c =>
         val enumChord = Try(ChordFigure.valueOf(c))
@@ -52,13 +53,13 @@ object Parser extends IOApp:
       ).toVector).toVector
       val semiphrasesQuantity = semiphrases.size
       val firstSemiphrase = semiphrases.head
-      val lastSemiphrase = semiphrases.last
       val middleSemiphrases = semiphrases.tail.dropRight(1)
+      val lastSemiphrase = semiphrases.last
 
-      val metadataArray = metadata.replaceAll("""\{|\}""","").toLowerCase.split(",")
       val choralNum = metadataArray(0).toInt
       val key = Note.valueOf(metadataArray(1))
       val mode = Mode.valueOf(metadataArray(2))
+
       Choral(choralNum, key, mode, firstSemiphrase,middleSemiphrases,lastSemiphrase)
     )
     IO(chorals)
