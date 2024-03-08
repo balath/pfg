@@ -9,11 +9,20 @@ import scala.util.{Failure, Success, Try, control}
 object Parser extends IOApp:
 
   type Semiphrase = Vector[ChordFigure]
+
+  type TransitionMatrix = Map[ChordFigure,Map[ChordFigure,ChordFigure]]
+  //TODO transition matrix definition
+  case class ChoralsMetadata()
+  //TODO metadata type definition
+  case class Model(first:TransitionMatrix, middles:TransitionMatrix, last:TransitionMatrix)
+  //TODO probabilistic model type definition
   case class Choral(num: Int, key: Note, mode: Mode, first: Semiphrase, middle: Vector[Semiphrase], last: Semiphrase)
 
   val program = for {
     lines <- readFromRawData(dataPath)
     chorals <- extractChorals(lines)
+    metadata <- processMetadata(chorals)
+    model <- processModel(chorals)
     _ <- IO.println(s"${chorals.size} chorals parsed successfully")
   } yield ExitCode.Success
 
@@ -54,3 +63,13 @@ object Parser extends IOApp:
     )
     IO(chorals)
 
+  //Model processing functions ---------------------------------------------------------------------------------
+  def processMetadata(chorals: Vector[Choral]): IO[ChoralsMetadata] = ???
+  def processModel(chorals: Vector[Choral]): IO[Model] =
+    //TODO probabilistic model processing
+    val firstSemiphraseTransitionMatrix = generateTransitionMatrixFromSemiphrases(chorals.map(_.first))
+    val middleSemiphrasesTransitionMatrix = generateTransitionMatrixFromSemiphrases(chorals.flatMap(_.middle))
+    val lastSemiphraseTransitionMatrix = generateTransitionMatrixFromSemiphrases(chorals.map(_.last))
+    IO(Model(firstSemiphraseTransitionMatrix,middleSemiphrasesTransitionMatrix,lastSemiphraseTransitionMatrix))
+
+  def generateTransitionMatrixFromSemiphrases(value: Vector[Parser.Semiphrase]): TransitionMatrix = ???
