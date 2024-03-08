@@ -251,5 +251,3 @@ enum ChordFigure:
   case viio_bVII extends ChordFigure()
 
 end ChordFigure
-
-
