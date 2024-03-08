@@ -1,0 +1,26 @@
+########################################################
+#                  DATASET GRAMMAR                     #
+########################################################
+
+LINE ⇒ CHORAL,KEY,MODE,TIME_SIGNATURE,MEASURES,FIRST_MEASURE,LAST_MEASURE:SEMIPHRASES
+
+CHORAL ⇒ Int
+KEY ⇒ NOTEALTERATION
+MODE ⇒ maj | min
+TIME_SIGNATURE ⇒ 4 | 3
+MEASURES ⇒ Int
+FIRST_MEASURE ⇒ 1 | 2 | 3 | 4
+LAST_MEASURE ⇒ 1 | 2 | 3 | 4
+NOTE ⇒ C | D | E | F | G | A | B
+ALTERATION ⇒ s | f | ε
+
+SEMIPHRASES ⇒ SEMIPHRASE;SEMIPHRASES | SEMIPHRASE
+SEMIPHRASE ⇒ CHORDS
+CHORDS ⇒ CHORD,CHORDS | CHORD
+CHORD ⇒ GRADETYPEINVERSION | GRADETYPEINVERSION_GRADE
+GRADE ⇒ i | I | ii | iii | bIII | iv | IV | v | V | vi | bVI | vii | bVII
+TYPE ⇒ o | ø | + | ε
+INVERSION ⇒ 6 | 64 | 7 | 65 | 43 | 42 | ε
+
+Regex for capture chords: (vii|vi|bVII|iii|ii|bIII|bII|iv|IV|v|V|bVI|i|I)(o|ø|aug)*(64|65|7|6|43|42)*_?(vi|vii|bVII|iii|ii|bIII|iv|IV|v|V|bVI|i|I)*
+
