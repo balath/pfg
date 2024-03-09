@@ -35,7 +35,7 @@ object Parser extends IOApp:
 
   def extractChorals(lines: Vector[String]): IO[Vector[Choral]] =
     val chorals: Vector[Choral] = lines.map(line =>
-      val (metadata,chords) = line match { case chordMetadataSplitter(m,c) => (m,c) }
+      val (metadata,chords) = line match { case chordAndMetadataRegex(m,c) => (m,c) }
       val metadataArray = metadata.split(",")
 
       //Checker for chord annotation errors
