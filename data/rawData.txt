@@ -37,4 +37,8 @@
 38,fs,min,4,10,1,3:bIII,i,bVII6,bIII;bVII6,bIII,bVII7,bIII;V6,i,V7,i;i,V64_bVII,bVII6,V7_bVII,vi_bVII,i,v43,bIII;bIII,bVI,iv,V6,i,iiø65,V,iv6,V;I6,V65_iv,iv,I,iv6,iv,viio43,I
 39,d,min,4,12,1,4:iv_v,viio43_v,v6,v,iiø65_v,V65_v,iiø6_v,V7_v,V;V6,i,i6,viio65,V6,i,V,i6,V,i;i,i,iv6,iv,i,iv65,bVII,bIII;bIII,i,viio65,I6,V6_v,v,iiø65_v,V_v,v;viio6_bVII,bVII,bIII,bIII6,bVII,bIIIaug65,iiø65,V7,bVI;V7_iv,iv,bIIIaug6,V7,I
 40,e,min,4,13,1,3:iv7_v,V42_v,v6,v,iiø42_v,V65_v,v,bIII,V7_v,V;V6,i,iiø,V43,i6,V,V7,i;i,i,iv6,IV6,i,iv6,V;V,i6,bVII6,I6,ii_v,V6_v,V7_v,v,iiø65_v,V_v,v;viio6_bVII,bVII7,bIII,bIII6,bVII,viiø_bVII,bVII,bVII6,IV;i6,viio6,i,bVI,iiø65,V7,I
-41,e,min,4,13,1,3:iv7_v,V7_v,v6,viio6_v,v,V65_v,v,V7_v,V;V6,i,bVII6,bIII,i,iiø65,V7,i
+41,e,min,4,13,1,3:iv7_v,V7_v,v6,viio6_v,v,V65_v,v,V7_v,V;V6,i,bVII6,bIII,i,iiø65,V7,i;i,bVI,iv,iv6,i,bVII6,bIII;bIII,i,viio6,i,v6,v64,V7_v,v;i,bVII6,bIII,bIII6,bVII7,i,bVII,iv;V6,viio,i,iv7,V7,I
+42,e,min,4,13,1,3:iv7_v,V7_v,v6,viio6_v,v,V65_v,v,V7_v,V;V6,i,bVII6,bIII,i,iiø65,V7,i;i,bVI,iv,iv6,i,bVII6,bIII;bIII,i,viio6,i,v6,v64,V7_v,v;i,bVII6,bIII,bIII6,bVII,i,bVII6,V_bVII;V6,viio,i,iv7,V7,I
+43,e,min,4,13,1,4:iv7_v,V7_v,v6,V64_v,v,V65_v,v,V7_v,V;V6,i,v43,bIII,V43,i,iiø65,V7,i;i,i,iv6,iv,viio43,i,bVII6,bIII;bIII,v43,i,viio6,IV6_v,V7_v,v,V7_v,v;bVI6,bVII,bIII,bIII6,bVII,i,V7,bVI;bIII,viio,i,bVI,iiø65,V7,I
+44,b,min,4,17,1,4:iv,iv,iv,bVII6,V65_iv,iv,iv6,viio6_iv,iv,I;bIII6,iv,bIII,bIII6,bVII,iv,v,bVI,bVI6,bIII64;bIII,i,i,i6,v7,bVI,bIII6,iv,i,i6,bIII6,v6,bIIIaug65_iv,iv6_iv,V_iv;iv6,V64_iv,iv,iv,i6,i,bVI,bVI6,bIII,bIII,V7_iv,bVI_iv,iv43,V65,bIIIaug64,V6,i,i6,i64,V42,i6,i,i64,V
+45,a,min,4,15,1,4:iv,iio6,bIII,bVI,bIII,i6,V,i;v,i,viiø43_iv,iv,bIII,iv,V_iv,iv;iv,bVII6,bVII,bIII,i,i64,V,i;i,V65_bVII,bVII,bIII,bVI,iio6,V7,i;V,i,iio6,bVI,viio6_iv,V65_iv,iv,I;iv,bVI_iv,iio6_iv,bIIIaug_iv,bVI_iv,iio6_iv,V7_iv,iv;V_bVII,bVII,bVII6,bIII,iv6,i64,V7,I
