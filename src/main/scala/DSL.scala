@@ -51,7 +51,7 @@ enum Note(val pitch: Int):
   def interval(interval: Interval): Note =
     val newPitch = (this.pitch + interval.semitones) % 12
     val newNoteKey = (diatonicScaleNoteNum(this.toString.substring(0, 1)) + interval.diatonic - 1) % 7
-    val newNoteName: String = diatonicScaleNumNote(newNoteKey).get
+    val newNoteName: String = diatonicScaleNumNote(newNoteKey)
     val newPitchNotes = Note.values.filter(_.pitch == newPitch)
     newPitchNotes.filter(_.toString.startsWith(newNoteName)).headOption.getOrElse(newPitchNotes.head)
   def chord(chord: ChordFigure): Chord = ???
@@ -269,4 +269,26 @@ enum ChordFigure:
   case bIIIaug64 extends ChordFigure()
   case viiø43_iv extends ChordFigure()
   case iio6_iv extends ChordFigure()
+  case bVII_iv extends ChordFigure()
+  case bIII_iv extends ChordFigure()
+  case bIIIaug7_iv extends ChordFigure()
+  case iv65_iv extends ChordFigure()
+  case ii6_iv extends ChordFigure()
+  case iv7_iv extends ChordFigure()
+  case viiø_IV extends ChordFigure()
+  case ii_IV extends ChordFigure()
+  case vi_IV extends ChordFigure()
+  case ii65_IV extends ChordFigure()
+  case bVI7_ii extends ChordFigure()
+  case bIIIaug_ii extends ChordFigure()
+  case IV7_ii extends ChordFigure()
+  case iv6_vi extends ChordFigure()
+  case iiø43_vi extends ChordFigure()
+  case viio6_bVI extends ChordFigure()
+  case viio42_iv extends ChordFigure()
+  case V66_iv extends ChordFigure()
+  case viio6_bIII extends ChordFigure()
+  case iiø42_iv extends ChordFigure()
+  case viio7_iv extends ChordFigure()
+
 end ChordFigure
