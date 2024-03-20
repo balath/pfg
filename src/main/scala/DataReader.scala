@@ -2,7 +2,7 @@ import scala.io.StdIn.readLine
 import scala.io.Source.fromFile
 import dsl.{ChordFigure, Mode, Note}
 import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
-import common.Common._
+import common.DataRegex._
 
 object DataReader extends App:
 
