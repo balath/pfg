@@ -11,6 +11,9 @@ object Parser extends IOApp:
 
   val r = new Random()
 
+  extension(cfs: Vector[ChordFigure])
+    def zipWithOcurrences: Map[ChordFigure, Double] = cfs.zipWithOcurrences
+
   override def run(args: List[String]): IO[ExitCode] = program
 
   val program = for {
@@ -79,7 +82,7 @@ object Parser extends IOApp:
     IO(Model(firstSemiphrasesModel, middleSemiphrasesModel, lastSemiphrasesModel, endingToInitialChordsTransitions))
 
   def processSemiphrases(semiphrases: Vector[Semiphrase]): SemiphraseModel =
-    val cf1Ocurrences = semiphrases.map(_.head).groupMapReduce(identity)(_ => 1.0)(_ + _)
+    val cf1Ocurrences = semiphrases.map(_.head).zipWithOcurrences
     val cf1SelectionWheel: SelectionWheel = chordOcurrencesToSelectionWheel(cf1Ocurrences.toVector, semiphrases.length)
 
     val cf2Transitions: FirstOrderTransitions = semiphrases
@@ -99,7 +102,7 @@ object Parser extends IOApp:
 
     val endingChords: Map[ChordFigure, Double] = semiphrases
       .map(_.last)
-      .groupMapReduce(identity)(_ => 1.0)(_ + _)
+      .zipWithOcurrences
       .map((cf, occurrences) => (cf, occurrences / semiphrases.length))
 
     val (lengthsSum, maxLength): (Int, Int) = semiphrases.foldLeft((0, 0))((z, sp) => (z._1 + sp.length, sp.length.max(z._2)))
@@ -115,7 +118,7 @@ object Parser extends IOApp:
    * @return tuple of a chord and its selection wheel of transitions
    */
   def chordProgressionsToTransitions(progressions: (ChordFigure, Vector[ChordFigure])): (ChordFigure, SelectionWheel) =
-    val cf2sOccurrences: Vector[(ChordFigure, Double)] = progressions._2.groupMapReduce(identity)(_ => 1.0)(_ + _).toVector
+    val cf2sOccurrences: Vector[(ChordFigure, Double)] = progressions._2.zipWithOcurrences.toVector
     val cf2sSelectionWheel: SelectionWheel = chordOcurrencesToSelectionWheel(cf2sOccurrences, progressions._2.length)
     progressions._1 -> cf2sSelectionWheel
 
