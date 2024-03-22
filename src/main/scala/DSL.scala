@@ -3,7 +3,7 @@ package dsl
 import common.DataRegex._
 
 type Semiphrase = Vector[ChordFigure]
-case class Choral(num: Int, key: Note, mode: Mode, first: Semiphrase, middle: Vector[Semiphrase], last: Semiphrase)
+case class Choral(num: Int, key: Note, mode: Mode, semiphrases: Vector[Semiphrase])
 case class Chord(bass: Note, notes: Vector[Note])
 enum Mode:
   case maj extends Mode
@@ -78,6 +78,7 @@ enum Interval(val diatonic: Int, val semitones: Int):
   case perf8 extends Interval(1,0)
 end Interval
 enum ChordFigure:
+  case Empty extends ChordFigure
   case I extends ChordFigure
   case V6 extends ChordFigure
   case IV6 extends ChordFigure

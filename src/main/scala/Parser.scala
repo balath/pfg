@@ -16,14 +16,12 @@ object Parser extends IOApp:
   val program = for {
     lines <- readFromRawData(dataPath)
     chorales <- extractChorales(lines)
-    (majorChorales, minorChorales): (Vector[Choral],Vector[Choral]) = chorales.partition(_.mode.equals(Mode.maj))
-    majorMetadata <- processMetadata(majorChorales)
-    minorMetadata <- processMetadata(minorChorales)
-    majorModel <- processModel(majorChorales, majorMetadata)
-    minorModel <- processModel(minorChorales, minorMetadata)
-    _ <- IO.println(s"${chorales.size} chorals parsed successfully")
-      >> IO.println(s"Major semiphrase simulation: ${majorModel.genInitialSemiphrase(r)}")
-      >> IO.println(s"Minor semiphrase simulation: ${minorModel.genInitialSemiphrase(r)}")
+    (majorChorales, minorChorales): (Vector[Choral], Vector[Choral]) = chorales.partition(_.mode.equals(Mode.maj))
+    majorModel <- processModel(majorChorales)
+    minorModel <- processModel(minorChorales)
+    _ <- IO.println(s"${chorales.length} chorales parsed successfully")
+      >> IO.println(s"Major semiphrase simulation: ${majorModel.generateChoral(r).mkString(";")}")
+      >> IO.println(s"Minor semiphrase simulation: ${minorModel.generateChoral(r)}")
   } yield ExitCode.Success
 
   def readFromRawData(path: String): IO[Vector[String]] =
@@ -49,40 +47,47 @@ object Parser extends IOApp:
           case Success(value) => value
           case Failure(exception) =>
             println(exception.getMessage)
-            ChordFigure.i
+            ChordFigure.Empty
       ).toVector).toVector
-      val semiphrasesQuantity = semiphrases.size
-      val firstSemiphrase = semiphrases.head
-      val middleSemiphrases = semiphrases.tail.dropRight(1)
-      val lastSemiphrase = semiphrases.last
-
+      val semiphrasesQuantity = semiphrases.length
       val choralNum = metadataArray(0).toInt
       val key = Note.valueOf(metadataArray(1))
       val mode = Mode.valueOf(metadataArray(2))
 
-      Choral(choralNum, key, mode, firstSemiphrase, middleSemiphrases, lastSemiphrase)
+      Choral(choralNum, key, mode, semiphrases)
     )
     IO(chorales)
-    
-  def processMetadata(chorales: Vector[Choral]): IO[ChoralesMetadata] =
-    val firstSemiphraseLength = chorales.map(_.first).foldLeft(0)((z,sp) => z + sp.size) / (1.0 * chorales.size)
-    IO(ChoralesMetadata(chorales.size, firstSemiphraseLength))
 
   //Model processing functions ---------------------------------------------------------------------------------
-  def processModel(chorales: Vector[Choral], metadata: ChoralesMetadata): IO[Model] =
-    val firstSemiphrases = chorales.map(_.first)
-    val middleSemiphrases = chorales.flatMap(_.middle)
-    val lastSemiphrases = chorales.map(_.last)
+  def processModel(chorales: Vector[Choral]): IO[Model] =
+    val firstSemiphrasesModel = processSemiphrases(chorales.map(_.semiphrases.head))
+    val middleSemiphrasesModel = processSemiphrases(chorales.flatMap(_.semiphrases.tail.dropRight(1)))
+    val lastSemiphrasesModel = processSemiphrases(chorales.map(_.semiphrases.last))
+    val endingToInitialChordsTransitions: FirstOrderTransitions = chorales
+      .flatMap(choral => choral.semiphrases.lazyZip(choral.semiphrases.tail).map((a, b) => (a.last, b.head)))
+      .groupMapReduce((cf1, _) => cf1)((_, cf2) => Vector(cf2))(_ ++ _).toVector
+      .map(chordProgressionsToTransitions).toMap
+    val (minSemiphrases, maxSemiphrases) = chorales
+      .map(_.semiphrases.length)
+      .foldLeft((Int.MaxValue, Int.MinValue)) {
+        case ((accMin, accMax), length) => (accMin.min(length), accMax.max(length))
+      }
+    println(s"Model ${chorales.head.mode} :min = $minSemiphrases ; max = $maxSemiphrases")
 
-    val cf1Ocurrences = firstSemiphrases.map(_.head).groupMapReduce(identity)(_ => 1.0)(_ + _)
-    val cf1SelectionWheel: SelectionWheel = chordOcurrencesToSelectionWheel(cf1Ocurrences.toVector, firstSemiphrases.size)
 
-    val cf2Transitions: FirstOrderTransitions = firstSemiphrases
+
+    IO(Model(firstSemiphrasesModel, middleSemiphrasesModel, lastSemiphrasesModel, endingToInitialChordsTransitions))
+
+  def processSemiphrases(semiphrases: Vector[Semiphrase]): SemiphraseModel =
+    val cf1Ocurrences = semiphrases.map(_.head).groupMapReduce(identity)(_ => 1.0)(_ + _)
+    val cf1SelectionWheel: SelectionWheel = chordOcurrencesToSelectionWheel(cf1Ocurrences.toVector, semiphrases.length)
+
+    val cf2Transitions: FirstOrderTransitions = semiphrases
       .map(sp => (sp(0), sp(1)))
       .groupMapReduce((cf1, _) => cf1)((_, cf2) => Vector(cf2))(_ ++ _).toVector
       .map(chordProgressionsToTransitions).toMap
 
-    val firstSemiphraseTransitions: SecondOrderTransitions = firstSemiphrases
+    val transitions: SecondOrderTransitions = semiphrases
       .flatMap(sp => sp.lazyZip(sp.tail).lazyZip(sp.tail.tail))
       .groupMapReduce((cf1, _, _) => cf1)((_, cf2, cf3) => Vector((cf2, cf3)))(_ ++ _).toVector
       .map((cf1, cfs) =>
@@ -92,23 +97,26 @@ object Parser extends IOApp:
         cf1 -> subMap
       ).toMap
 
-    val endingChordsProbabilities: Map[ChordFigure, Double] = firstSemiphrases
+    val endingChords: Map[ChordFigure, Double] = semiphrases
       .map(_.last)
       .groupMapReduce(identity)(_ => 1.0)(_ + _)
-      .map((cf,occurrences) => (cf, occurrences / firstSemiphrases.size))
+      .map((cf, occurrences) => (cf, occurrences / semiphrases.length))
 
-    println(endingChordsProbabilities)
-    IO(Model(cf1SelectionWheel, cf2Transitions, firstSemiphraseTransitions, endingChordsProbabilities, metadata))
+    val (lengthsSum, maxLength): (Int, Int) = semiphrases.foldLeft((0, 0))((z, sp) => (z._1 + sp.length, sp.length.max(z._2)))
+    val averageLength = lengthsSum / (1.0 * semiphrases.length)
+
+    SemiphraseModel(cf1SelectionWheel, cf2Transitions, transitions, endingChords, averageLength, maxLength)
 
   /**
    * Given a tuple of a chord and its next chords in a progression, generates the transitions tuple for such chord
    * by counting ocurrences and generating a selection wheel.   *
+   *
    * @param progressions tuple of a chord and a collection of its possible next chords
    * @return tuple of a chord and its selection wheel of transitions
    */
   def chordProgressionsToTransitions(progressions: (ChordFigure, Vector[ChordFigure])): (ChordFigure, SelectionWheel) =
     val cf2sOccurrences: Vector[(ChordFigure, Double)] = progressions._2.groupMapReduce(identity)(_ => 1.0)(_ + _).toVector
-    val cf2sSelectionWheel: SelectionWheel = chordOcurrencesToSelectionWheel(cf2sOccurrences, progressions._2.size)
+    val cf2sSelectionWheel: SelectionWheel = chordOcurrencesToSelectionWheel(cf2sOccurrences, progressions._2.length)
     progressions._1 -> cf2sSelectionWheel
 
   /**
