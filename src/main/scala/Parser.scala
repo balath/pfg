@@ -10,9 +10,12 @@ import model._
 object Parser extends IOApp:
 
   val r = new Random()
+  extension (cfs: Vector[ChordFigure])
+    def zipWithOcurrences: Map[ChordFigure, Double] = cfs.groupMapReduce(identity)(_ => 1.0)(_ + _)
 
-  extension(cfs: Vector[ChordFigure])
-    def zipWithOcurrences: Map[ChordFigure, Double] = cfs.zipWithOcurrences
+  extension(cfPairs: Vector[(ChordFigure, ChordFigure)])
+    def groupPairsByFirstElement: Vector[(ChordFigure, Vector[ChordFigure])] =
+      cfPairs.groupMapReduce((cf1, _) => cf1)((_, cf2) => Vector(cf2))(_ ++ _).toVector
 
   override def run(args: List[String]): IO[ExitCode] = program
 
@@ -23,8 +26,10 @@ object Parser extends IOApp:
     majorModel <- processModel(majorChorales)
     minorModel <- processModel(minorChorales)
     _ <- IO.println(s"${chorales.length} chorales parsed successfully")
-      >> IO.println(s"Major semiphrase simulation: ${majorModel.generateChoral(r).mkString(";")}")
-      >> IO.println(s"Minor semiphrase simulation: ${minorModel.generateChoral(r)}")
+      >> IO.println(s"\nMajor semiphrase simulation:\n${majorModel.generateChoral(r).mkString("\n")}")
+      >> IO.println("_".repeat(90))
+      >> IO.println(s"\nMinor semiphrase simulation:\n${minorModel.generateChoral(r).mkString("\n")}")
+      >> IO.println("_".repeat(90))
   } yield ExitCode.Success
 
   def readFromRawData(path: String): IO[Vector[String]] =
@@ -68,18 +73,17 @@ object Parser extends IOApp:
     val lastSemiphrasesModel = processSemiphrases(chorales.map(_.semiphrases.last))
     val endingToInitialChordsTransitions: FirstOrderTransitions = chorales
       .flatMap(choral => choral.semiphrases.lazyZip(choral.semiphrases.tail).map((a, b) => (a.last, b.head)))
-      .groupMapReduce((cf1, _) => cf1)((_, cf2) => Vector(cf2))(_ ++ _).toVector
+      .groupPairsByFirstElement
       .map(chordProgressionsToTransitions).toMap
-    val (minSemiphrases, maxSemiphrases) = chorales
-      .map(_.semiphrases.length)
-      .foldLeft((Int.MaxValue, Int.MinValue)) {
-        case ((accMin, accMax), length) => (accMin.min(length), accMax.max(length))
-      }
-    println(s"Model ${chorales.head.mode} :min = $minSemiphrases ; max = $maxSemiphrases")
+    val middleSectionBounds: (Int, Int) = chorales
+      .foldLeft((Int.MaxValue, Int.MinValue))((bounds, choral) =>
+        val length = choral.semiphrases.length
+        (bounds._1.min(length), bounds._2.max(length))
+      )
 
+    println(s"MIDDLE SECTION BOUNDS: min=${middleSectionBounds._1}, max=${middleSectionBounds._2}")
 
-
-    IO(Model(firstSemiphrasesModel, middleSemiphrasesModel, lastSemiphrasesModel, endingToInitialChordsTransitions))
+    IO(Model(firstSemiphrasesModel, middleSemiphrasesModel, lastSemiphrasesModel, endingToInitialChordsTransitions, middleSectionBounds))
 
   def processSemiphrases(semiphrases: Vector[Semiphrase]): SemiphraseModel =
     val cf1Ocurrences = semiphrases.map(_.head).zipWithOcurrences
@@ -87,7 +91,7 @@ object Parser extends IOApp:
 
     val cf2Transitions: FirstOrderTransitions = semiphrases
       .map(sp => (sp(0), sp(1)))
-      .groupMapReduce((cf1, _) => cf1)((_, cf2) => Vector(cf2))(_ ++ _).toVector
+      .groupPairsByFirstElement
       .map(chordProgressionsToTransitions).toMap
 
     val transitions: SecondOrderTransitions = semiphrases
@@ -95,7 +99,7 @@ object Parser extends IOApp:
       .groupMapReduce((cf1, _, _) => cf1)((_, cf2, cf3) => Vector((cf2, cf3)))(_ ++ _).toVector
       .map((cf1, cfs) =>
         val subMap = cfs
-          .groupMapReduce((cf2, _) => cf2)((_, cf3) => Vector(cf3))(_ ++ _).toVector
+          .groupPairsByFirstElement
           .map(chordProgressionsToTransitions).toMap
         cf1 -> subMap
       ).toMap
@@ -108,7 +112,7 @@ object Parser extends IOApp:
     val (lengthsSum, maxLength): (Int, Int) = semiphrases.foldLeft((0, 0))((z, sp) => (z._1 + sp.length, sp.length.max(z._2)))
     val averageLength = lengthsSum / (1.0 * semiphrases.length)
 
-    SemiphraseModel(cf1SelectionWheel, cf2Transitions, transitions, endingChords, averageLength, maxLength)
+    SemiphraseModel(cf1SelectionWheel, cf2Transitions, transitions, endingChords, averageLength, 4, maxLength)
 
   /**
    * Given a tuple of a chord and its next chords in a progression, generates the transitions tuple for such chord
