@@ -45,4 +45,24 @@ class DSLTest extends FunSuite{
     val obtained = minorModesNotes.map(mode => (minorModeIntervals.map(mode.head.interval(_)), mode))
     assert(obtained.forall((results, mode) => results.forall(mode.contains(_))), obtained.toString)
   }
+
+  test("Intervals over c and over g are properly obtained") {
+    val cExpected: Vector[Note] = Vector(Note.df, Note.d, Note.ef, Note.e, Note.f, Note.gf, Note.g, Note.gs, Note.af, Note.a, Note.bff, Note.bf, Note.b, Note.c)
+    val gExpected: Vector[Note] = Vector(Note.af, Note.a, Note.bf, Note.b, Note.c, Note.df, Note.d, Note.ds, Note.ef, Note.e, Note.ff, Note.f, Note.fs, Note.g)
+    val intervals = Interval.values.toVector
+
+    val cObtained: Vector[Note] = intervals.map(interval => {
+      val note = Note.c.interval(interval)
+      println(s"An $interval over c is a $note")
+      note
+    })
+    val gObtained: Vector[Note] = intervals.map(interval => {
+      val note = Note.g.interval(interval)
+      println(s"An $interval over g is a $note")
+      note
+    })
+    cObtained.zip(cExpected).foreach(tuple => assertEquals(tuple._1, tuple._2))
+    gObtained.zip(gExpected).foreach(tuple => assertEquals(tuple._1, tuple._2))
+  }
+
 }
