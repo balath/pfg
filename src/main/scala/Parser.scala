@@ -9,11 +9,11 @@ import model._
 
 object Parser extends IOApp:
 
-  val r = new Random()
+  val r = new Random
   extension (cfs: Vector[ChordFigure])
     def zipWithOcurrences: Map[ChordFigure, Double] = cfs.groupMapReduce(identity)(_ => 1.0)(_ + _)
 
-  extension(cfPairs: Vector[(ChordFigure, ChordFigure)])
+  extension (cfPairs: Vector[(ChordFigure, ChordFigure)])
     def groupPairsByFirstElement: Vector[(ChordFigure, Vector[ChordFigure])] =
       cfPairs.groupMapReduce((cf1, _) => cf1)((_, cf2) => Vector(cf2))(_ ++ _).toVector
 
@@ -26,9 +26,9 @@ object Parser extends IOApp:
     majorModel <- processModel(majorChorales)
     minorModel <- processModel(minorChorales)
     _ <- IO.println(s"${chorales.length} chorales parsed successfully")
-      >> IO.println(s"\nMajor semiphrase simulation:\n${majorModel.generateChoral(r).mkString("\n")}")
+      >> IO.println(s"\nMajor semiphrase simulation:\n${majorModel.generateChoral(r).map(_.mkString(";")).mkString("\n")}")
       >> IO.println("_".repeat(90))
-      >> IO.println(s"\nMinor semiphrase simulation:\n${minorModel.generateChoral(r).mkString("\n")}")
+      >> IO.println(s"\nMinor semiphrase simulation:\n${minorModel.generateChoral(r).map(_.mkString(";")).mkString("\n")}")
       >> IO.println("_".repeat(90))
   } yield ExitCode.Success
 
@@ -75,6 +75,7 @@ object Parser extends IOApp:
       .flatMap(choral => choral.semiphrases.lazyZip(choral.semiphrases.tail).map((a, b) => (a.last, b.head)))
       .groupPairsByFirstElement
       .map(chordProgressionsToTransitions).toMap
+    //TODO: Calculate middle section length distribution
     val middleSectionBounds: (Int, Int) = chorales
       .foldLeft((Int.MaxValue, Int.MinValue))((bounds, choral) =>
         val length = choral.semiphrases.length
@@ -109,10 +110,12 @@ object Parser extends IOApp:
       .zipWithOcurrences
       .map((cf, occurrences) => (cf, occurrences / semiphrases.length))
 
-    val (lengthsSum, maxLength): (Int, Int) = semiphrases.foldLeft((0, 0))((z, sp) => (z._1 + sp.length, sp.length.max(z._2)))
-    val averageLength = lengthsSum / (1.0 * semiphrases.length)
+    //TODO: Calculate semiphrases length distribution 
+    val (lengthsSum, minLength, maxLength): (Int, Int, Int) = semiphrases
+      .foldLeft((0, Int.MaxValue, 0))((z, sp) => (z._1 + sp.length, sp.length.min(z._2), sp.length.max(z._3)))
+    val averageLength = lengthsSum / semiphrases.length.toDouble
 
-    SemiphraseModel(cf1SelectionWheel, cf2Transitions, transitions, endingChords, averageLength, 4, maxLength)
+    SemiphraseModel(cf1SelectionWheel, cf2Transitions, transitions, endingChords, averageLength, minLength, maxLength)
 
   /**
    * Given a tuple of a chord and its next chords in a progression, generates the transitions tuple for such chord

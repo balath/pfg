@@ -1,7 +1,7 @@
 package model
 
 import cats.kernel.Previous
-import dsl.{ChordFigure, Mode, Note}
+import dsl.{Chord, ChordFigure, Mode, Note}
 
 import scala.util.{Failure, Random, Success, Try}
 
@@ -11,13 +11,14 @@ type FirstOrderTransitions = Map[ChordFigure, SelectionWheel]
 type SecondOrderTransitions = Map[ChordFigure, Map[ChordFigure, SelectionWheel]]
 
 extension (r: Random)
+  def nSigma: Int = 3
   def nextGaussianBetween(lowerBound: Double, upperBound: Double): Double =
     val mean = ((upperBound - lowerBound) / 2) + lowerBound
-    val std = (mean - lowerBound) / 3
+    val std = (mean - lowerBound) / nSigma
     lowerBound.max(upperBound.min(r.nextGaussian() * std + mean))
   def nextGaussianBetween(lowerBound: Int, upperBound: Int): Int =
     val mean = ((upperBound - lowerBound) / 2.0) + lowerBound
-    val std = (mean - lowerBound) / 3
+    val std = (mean - lowerBound) / nSigma
     lowerBound.max(upperBound.min((r.nextGaussian() * std + mean).round.toInt))
 
 case class SemiphraseModel(cf1Distribution: SelectionWheel,
@@ -45,7 +46,7 @@ case class Model(initialSemiphrase: SemiphraseModel,
                  //                  middles: TransitionMatrix,
                  //                  last: TransitionMatrix
                 ):
-  def generateChoral(r: Random): Vector[Vector[ChordFigure]] =
+  def generateChoral(r: Random): Vector[Vector[Chord]] =
     def generateMiddleSection(length: Int, acc: Vector[Vector[ChordFigure]], lastChord: ChordFigure): Vector[Vector[ChordFigure]] =
       if length == 0 then acc
       else
@@ -55,12 +56,14 @@ case class Model(initialSemiphrase: SemiphraseModel,
 
     val initial = generateSemiphrases(initialSemiphrase, None)(r)
     println(s"Initial semiphrase generated: $initial")
+    //TODO: Create data structure for middle section length distribution
     val middleSectionLength = r.nextGaussianBetween(middleSectionBounds._1, middleSectionBounds._2)
     val middleSection = generateMiddleSection(middleSectionLength, Vector.empty, initial.last)
     val last = generateSemiphrases(lastSemiphrase, Some(middleSection.last.last))(r)
     println(s"Final semiphrase generated: $last")
 
-    initial +: middleSection :+ last
+    val choral = initial +: middleSection :+ last
+    choral.map(_.map(Note.c.chord(_)))
 
   def genFirstChord(model: SemiphraseModel, previousSemiphraseEnding: Option[ChordFigure])(r: Random): ChordFigure =
     previousSemiphraseEnding match
@@ -85,8 +88,9 @@ case class Model(initialSemiphrase: SemiphraseModel,
     if currentLength >= semiphraseModel.maxLength && currentChordEndingProbability > 0.0 then
       println(s"ENDING at ($currentLength) by LENGTH OUT OF BOUNDS with $cf")
       return true
-    val currentLengthBias = 0.33 + currentLength / semiphraseModel.averageLength
+    val currentLengthBias = currentLength / semiphraseModel.averageLength
     val endingBias = currentLengthBias * currentChordEndingProbability
+    //TODO: Create data structure for semiphrases length distribution
     val random = r.nextGaussianBetween(0.0,1.0)
     if random < endingBias then
       println(s"ENDING at ($currentLength) by STOCHASTIC ENDING with $cf, chordProb=$currentChordEndingProbability, lengthProb=$currentLengthBias, bias=$endingBias, r=$random")
