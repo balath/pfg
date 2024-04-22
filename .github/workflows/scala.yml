@@ -1,0 +1,45 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Scala CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: 'sbt'
+    - name: Run
+      run: sbt run
+      # Optional: This step uploads information to the GitHub dependency graph and unblocking Dependabot alerts for the repository
+    - name: Upload dependency graph
+      uses: scalacenter/sbt-dependency-submission@ab086b50c947c9774b70f39fc7f6e20ca2706c91
+    - name: Get changed files
+      id: getfile
+      run: |
+        echo "::set-output name=files::$(find ${{github.workspace}} -name "${{ *.ly }}" -printf "%P\n" | xargs)"
+    - name: LILYPOND files considered echo output
+      run: |
+        echo ${{ steps.getfile.outputs.files }}
+    - name: Generate PDF music sheets
+      uses: alexandre-touret/lilypond-github-action@master
+      with:
+          args: -V -fpdf -fpng -fmidi ${{ steps.getfile.outputs.files }}
