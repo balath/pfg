@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LILYPOND_FILES: "*.ly"
+      GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
     steps:
     - uses: actions/checkout@v3
@@ -47,12 +48,6 @@ jobs:
       run: |
         git config --global user.email "sflor5@alumno.uned.es"
         git config --global user.name "balath"
-        git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:${{ secrets.GH_TOKEN }} | base64)"
-    - name: Add files
-      run: git add .
-    - name: Commit changes
-      run: git commit -m "Add action files"
-    - name: Push changes
-      run: git push
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        git add .
+        git commit -m "Add action files"
+        git push
