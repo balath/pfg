@@ -23,13 +23,13 @@ case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
       case 3 => "2"
       case _ => "4"
     val lyrics: String = semiphrases
-      .map(_.map(_.figure.toString
+      .map(_.map(c => s"\"${c.figure.toString
         .replace("semdis","ø")
         .replace("dis","o")
         .replace("aug","+")
-        .replace("_","/")
+        .replace("_","/")}\""
       ).mkString(" ")).mkString(" ")
-    val music = s"<<\n\\relative { \n${chords.dropRight(1).mkString(" ")} ${finalChord.replace("4\\fermata",s"$finalDuration\\fermata")}\n}\n \\addlyrics { \n$lyrics \n} \n>>"
+    val music = s"\\version \"2.24.3\"\n<<\n\\relative { \n${chords.dropRight(1).mkString(" ")} ${finalChord.replace("4\\fermata",s"$finalDuration\\fermata")}\n } \n \\addlyrics { \n$lyrics \n } \n>>"
     music
 
 case class Chord(figure: ChordFigure, bass: Note, notes: Vector[Note]):
