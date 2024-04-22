@@ -18,6 +18,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+      LILYPOND_FILES: "*.ly"
 
     steps:
     - uses: actions/checkout@v3
@@ -35,7 +37,7 @@ jobs:
     - name: Get changed files
       id: getfile
       run: |
-        echo "::set-output name=files::$(find ${{github.workspace}} -name "${{ *.ly }}" -printf "%P\n" | xargs)"
+        echo "::set-output name=files::$(find ${{github.workspace}} -name "${{ env.LILYPOND_FILES }}" -printf "%P\n" | xargs)"
     - name: LILYPOND files considered echo output
       run: |
         echo ${{ steps.getfile.outputs.files }}
