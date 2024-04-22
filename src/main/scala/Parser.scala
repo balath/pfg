@@ -1,11 +1,14 @@
 package generator
 
 import cats.effect.{ExitCode, IO, IOApp, Resource}
+import cats.syntax.writer
 
 import scala.util.{Failure, Random, Success, Try, control}
-import common.DataRegex._
-import dsl._
-import model._
+import common.DataRegex.*
+import dsl.*
+import model.*
+
+import java.io.{File, FileOutputStream, FileWriter}
 
 object Parser extends IOApp:
 
@@ -26,11 +29,16 @@ object Parser extends IOApp:
     majorModel <- processModel(majorChorales)
     minorModel <- processModel(minorChorales)
     _ <- IO.println(s"${chorales.length} chorales parsed successfully")
-      >> IO.println(s"\nMajor semiphrase simulation:\n${majorModel.generateChoral(r).map(_.mkString(";")).mkString("\n")}")
-      >> IO.println("_".repeat(90))
-      >> IO.println(s"\nMinor semiphrase simulation:\n${minorModel.generateChoral(r).map(_.mkString(";")).mkString("\n")}")
-      >> IO.println("_".repeat(90))
+      >> writeTextToFile(s"$outputPath/major${r.nextInt()}.ly", majorModel.generateChoral(r, Note.c).toLilypondFileFormat)
+      >> writeTextToFile(s"$outputPath/minor${r.nextInt()}.ly", minorModel.generateChoral(r, Note.c).toLilypondFileFormat)
   } yield ExitCode.Success
+
+  def writeTextToFile(path: String, choral: String): IO[Unit] =
+    Resource
+      .make {
+        IO(new FileWriter(path))
+      } { writer => IO(writer.close()).handleErrorWith(_ => IO.unit) }
+      .use { writer => IO(writer.write(choral)) }
 
   def readFromRawData(path: String): IO[Vector[String]] =
     Resource

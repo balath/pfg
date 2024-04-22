@@ -8,19 +8,19 @@ class DSLTest extends FunSuite{
 
   val majorModesNotes = Vector(
     Vector(Note.c, Note.d, Note.e, Note.f, Note.g, Note.a, Note.b),
-    Vector(Note.cs, Note.ds, Note.es, Note.fs, Note.gs, Note.as, Note.bs),
-    Vector(Note.df, Note.ef, Note.f, Note.gf, Note.af, Note.bf, Note.c),
-    Vector(Note.d, Note.e, Note.fs, Note.g, Note.a, Note.b, Note.cs),
-    Vector(Note.ef, Note.f, Note.g, Note.af, Note.bf, Note.c, Note.d),
-    Vector(Note.e, Note.fs, Note.gs, Note.a, Note.b, Note.cs, Note.ds),
-    Vector(Note.f, Note.g, Note.a, Note.bf, Note.c, Note.d, Note.e),
-    Vector(Note.fs, Note.gs, Note.as, Note.b, Note.cs, Note.ds, Note.es),
-    Vector(Note.gf, Note.af, Note.bf, Note.cf, Note.df, Note.ef, Note.f),
-    Vector(Note.g, Note.a, Note.b, Note.c, Note.d, Note.e, Note.fs),
-    Vector(Note.af, Note.bf, Note.c, Note.df, Note.ef, Note.f, Note.g),
-    Vector(Note.a, Note.b, Note.cs, Note.d, Note.e, Note.fs, Note.gs),
-    Vector(Note.bf, Note.c, Note.d, Note.ef, Note.f, Note.g, Note.a),
-    Vector(Note.b, Note.cs, Note.ds, Note.e, Note.fs, Note.gs, Note.as),
+    Vector(Note.cis, Note.dis, Note.eis, Note.fis, Note.gis, Note.ais, Note.bis),
+    Vector(Note.des, Note.ees, Note.f, Note.ges, Note.aes, Note.bes, Note.c),
+    Vector(Note.d, Note.e, Note.fis, Note.g, Note.a, Note.b, Note.cis),
+    Vector(Note.ees, Note.f, Note.g, Note.aes, Note.bes, Note.c, Note.d),
+    Vector(Note.e, Note.fis, Note.gis, Note.a, Note.b, Note.cis, Note.dis),
+    Vector(Note.f, Note.g, Note.a, Note.bes, Note.c, Note.d, Note.e),
+    Vector(Note.fis, Note.gis, Note.ais, Note.b, Note.cis, Note.dis, Note.eis),
+    Vector(Note.ges, Note.aes, Note.bes, Note.ces, Note.des, Note.ees, Note.f),
+    Vector(Note.g, Note.a, Note.b, Note.c, Note.d, Note.e, Note.fis),
+    Vector(Note.aes, Note.bes, Note.c, Note.des, Note.ees, Note.f, Note.g),
+    Vector(Note.a, Note.b, Note.cis, Note.d, Note.e, Note.fis, Note.gis),
+    Vector(Note.bes, Note.c, Note.d, Note.ees, Note.f, Note.g, Note.a),
+    Vector(Note.b, Note.cis, Note.dis, Note.e, Note.fis, Note.gis, Note.ais),
   )
 
   val minorModesNotes = for {
@@ -47,8 +47,8 @@ class DSLTest extends FunSuite{
   }
 
   test("Intervals over c and over g are properly obtained") {
-    val cExpected: Vector[Note] = Vector(Note.df, Note.d, Note.ef, Note.e, Note.f, Note.gf, Note.g, Note.gs, Note.af, Note.a, Note.bff, Note.bf, Note.b, Note.c)
-    val gExpected: Vector[Note] = Vector(Note.af, Note.a, Note.bf, Note.b, Note.c, Note.df, Note.d, Note.ds, Note.ef, Note.e, Note.ff, Note.f, Note.fs, Note.g)
+    val cExpected: Vector[Note] = Vector(Note.des, Note.d, Note.ees, Note.e, Note.f, Note.ges, Note.g, Note.gis, Note.aes, Note.a, Note.beses, Note.bes, Note.b, Note.c)
+    val gExpected: Vector[Note] = Vector(Note.aes, Note.a, Note.bes, Note.b, Note.c, Note.des, Note.d, Note.dis, Note.ees, Note.e, Note.fes, Note.f, Note.fis, Note.g)
     val intervals = Interval.values.toVector
 
     val cObtained: Vector[Note] = intervals.map(interval => {

@@ -1,7 +1,7 @@
 package model
 
 import cats.kernel.Previous
-import dsl.{Chord, ChordFigure, Mode, Note}
+import dsl.{Choral, Chord, ChordFigure, GeneratedChoral, Mode, Note}
 
 import scala.util.{Failure, Random, Success, Try}
 
@@ -46,7 +46,7 @@ case class Model(initialSemiphrase: SemiphraseModel,
                  //                  middles: TransitionMatrix,
                  //                  last: TransitionMatrix
                 ):
-  def generateChoral(r: Random): Vector[Vector[Chord]] =
+  def generateChoral(r: Random, key: Note): GeneratedChoral =
     def generateMiddleSection(length: Int, acc: Vector[Vector[ChordFigure]], lastChord: ChordFigure): Vector[Vector[ChordFigure]] =
       if length == 0 then acc
       else
@@ -63,7 +63,7 @@ case class Model(initialSemiphrase: SemiphraseModel,
     println(s"Final semiphrase generated: $last")
 
     val choral = initial +: middleSection :+ last
-    choral.map(_.map(Note.c.chord(_)))
+    GeneratedChoral(choral.map(_.map(key.chord(_))))
 
   def genFirstChord(model: SemiphraseModel, previousSemiphraseEnding: Option[ChordFigure])(r: Random): ChordFigure =
     previousSemiphraseEnding match
