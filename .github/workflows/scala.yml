@@ -38,8 +38,6 @@ jobs:
     - name: LILYPOND files considered echo output
       run: |
         echo ${{ steps.getfile.outputs.files }}
-    - name: Lilypond work
-      uses: actions/checkout@v4
-      with:
-          lilypond-version: 2.24
-    - run: lilypond -V -fpdf -fmidi ${{ steps.getfile.outputs.files }}
+    - name: Setup LilyPond
+      uses: codello/setup-lilypond@v0.1.0
+      run: lilypond -V -fpdf -fmidi ${{ steps.getfile.outputs.files }}
