@@ -46,7 +46,8 @@ jobs:
     - name: Configure Git
       run: |
         git config --global user.email "sflor5@alumno.uned.es"
-        git config --global user.name "@balath"
+        git config --global user.name "balath"
+        git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:${{ secrets.GH_TOKEN }} | base64)"
     - name: Add files
       run: git add .
     - name: Commit changes
