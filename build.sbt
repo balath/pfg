@@ -9,3 +9,4 @@ lazy val root = (project in file("."))
 
 libraryDependencies += "org.typelevel" %% "cats-effect" % "3.5.3"
 libraryDependencies += "org.scalameta" %% "munit" % "0.7.29" % Test
+Compile / run / mainClass := Some("generator.Parser")
