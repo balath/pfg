@@ -43,3 +43,13 @@ jobs:
         echo ${{ steps.getfile.outputs.files }}
     - name: Setup LilyPond
       run: lilypond -V -fpdf -fmidi ${{ steps.getfile.outputs.files }}
+    - name: Configure Git
+      run: |
+        git config --global user.email "sflor5@alumno.uned.es"
+        git config --global user.name "balath"
+    - name: Add files
+      run: git add .
+    - name: Commit changes
+      run: git commit -m "Add action files"
+    - name: Push changes
+      run: git push
