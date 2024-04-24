@@ -13,4 +13,4 @@ libraryDependencies ++= Seq(
 )
 
 
-Compile / run / mainClass := Some("generator.Parser")
+Compile / run / mainClass := Some("generator.Generator")
