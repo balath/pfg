@@ -1,7 +1,6 @@
 package dsl
 
 import common.DataRegex.*
-
 import scala.util.{Failure, Success, Try}
 
 type Semiphrase = Vector[ChordFigure]
@@ -97,7 +96,7 @@ enum Note(val pitch: Int):
     val (grade, kind, inversion, base) = chordFigure.toString match
       case chordRegex(g, k, i, b) => (Grade.valueOf(g), Try(Kind.valueOf(k)), Try(i.toInt), Try(Grade.valueOf(b)))
     //    println(s"Grade = $grade, Kind = $kind, Inversion = $inversion, Base = $base")
-    val tonic = if base.isSuccess then this.interval(base.get.interval) else this
+    val tonic = if base.isSuccess then this.interval(base.get.interval).interval(grade.interval) else this.interval(grade.interval)
     val third = if grade.mode.equals(min) then tonic.interval(min3) else tonic.interval(maj3)
     val fifth = kind match
       case Failure(_) => tonic.interval(perf5)

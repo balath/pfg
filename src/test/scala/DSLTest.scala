@@ -65,4 +65,11 @@ class DSLTest extends FunSuite{
     gObtained.zip(gExpected).foreach(tuple => assertEquals(tuple._1, tuple._2))
   }
 
+  test("Chords are created properly") {
+    import ChordFigure._, Note._
+    val chords = Vector(iv_v, viidis43_v, v6, v, iisemdis65_v, V65_v, iisemdis6_v,V7_v,V)
+    val expectedChords = Vector(Chord(iv_v,c,Vector(ees,g,c)), Chord(viidis43_v,c,Vector(ees,fis,a)), Chord(v6,bes,Vector(d,g,g)), Chord(v,g,Vector(bes,d,g)), Chord(iisemdis65_v,c,Vector(ees,g,a)), Chord(V65_v,fis,Vector(a,c,d)), Chord(iisemdis6_v,c,Vector(ees,g,a)), Chord(V7_v,d,Vector(fis,a,c)), Chord(V,g,Vector(b,d,g)))
+    chords.map(c.chord(_)).zip(expectedChords).foreach((obtained,expected) => assert(obtained.equals(expected),s"At chord ${obtained.figure}, when expected $expected is obtained: $obtained"))
+  }
+
 }

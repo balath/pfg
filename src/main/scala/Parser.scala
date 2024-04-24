@@ -8,11 +8,10 @@ import common.DataRegex.*
 import dsl.*
 import model.*
 
-import java.io.{File, FileOutputStream, FileWriter}
+import java.io.{File, FileOutputStream, FileWriter, ObjectOutputStream}
 
 object Parser extends IOApp:
-
-  val r = new Random
+  
   extension (cfs: Vector[ChordFigure])
     def zipWithOcurrences: Map[ChordFigure, Double] = cfs.groupMapReduce(identity)(_ => 1.0)(_ + _)
 
@@ -26,19 +25,18 @@ object Parser extends IOApp:
     lines <- readFromRawData(dataPath)
     chorales <- extractChorales(lines)
     (majorChorales, minorChorales): (Vector[Choral], Vector[Choral]) = chorales.partition(_.mode.equals(Mode.maj))
-    majorModel <- processModel(majorChorales)
+    majModel <- processModel(majorChorales)
     minorModel <- processModel(minorChorales)
     _ <- IO.println(s"${chorales.length} chorales parsed successfully")
-      >> writeTextToFile(s"$outputPath/major${r.nextInt()}.ly", majorModel.generateChoral(r, Note.c).toLilypondFileFormat)
-      >> writeTextToFile(s"$outputPath/minor${r.nextInt()}.ly", minorModel.generateChoral(r, Note.c).toLilypondFileFormat)
+    >> writeModelToFile("models/major.model",majModel)
   } yield ExitCode.Success
 
-  def writeTextToFile(path: String, choral: String): IO[Unit] =
+  def writeModelToFile(path: String, model: Model): IO[Unit] =
     Resource
       .make {
-        IO(new FileWriter(path))
+        IO(new ObjectOutputStream(new FileOutputStream(path)))
       } { writer => IO(writer.close()).handleErrorWith(_ => IO.unit) }
-      .use { writer => IO(writer.write(choral)) }
+      .use { writer => IO(writer.writeObject(model)) }
 
   def readFromRawData(path: String): IO[Vector[String]] =
     Resource
@@ -156,6 +154,3 @@ object Parser extends IOApp:
 
     rec(0.0f, Vector.empty, chordOccurrences)
 
-
-
-//  def generateTransitionMatrixFromSemiphrases(value: Vector[Semiphrase]): TransitionMatrix = ???

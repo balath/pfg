@@ -2,13 +2,46 @@ package model
 
 import cats.kernel.Previous
 import dsl.{Choral, Chord, ChordFigure, GeneratedChoral, Mode, Note}
-
 import scala.util.{Failure, Random, Success, Try}
 
 type SelectionTuple = (Double, ChordFigure)
 type SelectionWheel = Vector[SelectionTuple]
 type FirstOrderTransitions = Map[ChordFigure, SelectionWheel]
 type SecondOrderTransitions = Map[ChordFigure, Map[ChordFigure, SelectionWheel]]
+
+extension (sw: SelectionWheel)
+  def toDataStructureCode: String =
+    s"Vector(${
+      sw.map {
+        case (d, c) => s"($d, $c)"
+      }.mkString(",")
+    })"
+extension (fot: FirstOrderTransitions)
+  def fotToDataStructureCode: String =
+    s"""Map(${
+      fot.map {
+        case (cf, sw) => s"$cf -> Vector(${
+          sw.map {
+            case (d, c) => s"($d, $c)"
+          }.mkString(",")
+        })"
+      }.mkString(",")
+    })"""
+
+extension (cfd: Map[ChordFigure, Double])
+  def toDataStructureCode: String =
+    s"Map(${
+      cfd.map {
+        case (cf, d) => s"($cf -> $d)"
+      }.mkString(",")
+    })"
+  
+extension (sot: Map[ChordFigure, Map[ChordFigure, SelectionWheel]])
+  def sotToDataStructureCode: String =
+    s"""Map(${sot.map {
+      case (cf, fot) => s"$cf -> ${fot.fotToDataStructureCode}" 
+    }.mkString(",")}
+    )""" 
 
 extension (r: Random)
   def nSigma: Int = 3
@@ -28,7 +61,17 @@ case class SemiphraseModel(cf1Distribution: SelectionWheel,
                            averageLength: Double,
                            minLength: Int,
                            maxLength: Int
-                          )
+                          ):
+  def toDataStructureCode: String =
+    s"""SemiphraseModel(
+      ${cf1Distribution.toDataStructureCode}, 
+      ${cf2Transitions.fotToDataStructureCode}, 
+      ${transitions.sotToDataStructureCode}, 
+      ${endingChords.toDataStructureCode}, 
+      $averageLength, 
+      $minLength, 
+      $maxLength
+      )"""
 
 /**
  *
@@ -38,6 +81,7 @@ case class SemiphraseModel(cf1Distribution: SelectionWheel,
  * @param endingToInitialChordsTransitions
  * @param middleSectionBounds
  */
+@SerialVersionUID(123L)
 case class Model(initialSemiphrase: SemiphraseModel,
                  middleSemiphrases: SemiphraseModel,
                  lastSemiphrase: SemiphraseModel,
@@ -45,7 +89,7 @@ case class Model(initialSemiphrase: SemiphraseModel,
                  middleSectionBounds: (Int, Int)
                  //                  middles: TransitionMatrix,
                  //                  last: TransitionMatrix
-                ):
+                ) extends Serializable:
   def generateChoral(r: Random, key: Note): GeneratedChoral =
     def generateMiddleSection(length: Int, acc: Vector[Vector[ChordFigure]], lastChord: ChordFigure): Vector[Vector[ChordFigure]] =
       if length == 0 then acc
@@ -91,7 +135,7 @@ case class Model(initialSemiphrase: SemiphraseModel,
     val currentLengthBias = currentLength / semiphraseModel.averageLength
     val endingBias = currentLengthBias * currentChordEndingProbability
     //TODO: Create data structure for semiphrases length distribution
-    val random = r.nextGaussianBetween(0.0,1.0)
+    val random = r.nextGaussianBetween(0.0, 1.0)
     if random < endingBias then
       println(s"ENDING at ($currentLength) by STOCHASTIC ENDING with $cf, chordProb=$currentChordEndingProbability, lengthProb=$currentLengthBias, bias=$endingBias, r=$random")
       return true
