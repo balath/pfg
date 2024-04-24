@@ -146,7 +146,7 @@ end Grade
 val a: Note = Note.b
 
 enum Interval(val diatonic: Int, val semitones: Int):
-  case unis extends Interval(0, 0)
+  case unis extends Interval(1, 0)
   case min2 extends Interval(2, 1)
   case maj2 extends Interval(2, 2)
   case min3 extends Interval(3, 3)
@@ -163,7 +163,7 @@ enum Interval(val diatonic: Int, val semitones: Int):
   case perf8 extends Interval(8, 12)
 end Interval
 
-enum ChordFigure:
+enum ChordFigure  :
   case Empty extends ChordFigure
   case I extends ChordFigure
   case V6 extends ChordFigure

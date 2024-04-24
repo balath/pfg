@@ -47,8 +47,8 @@ class DSLTest extends FunSuite{
   }
 
   test("Intervals over c and over g are properly obtained") {
-    val cExpected: Vector[Note] = Vector(Note.des, Note.d, Note.ees, Note.e, Note.f, Note.ges, Note.g, Note.gis, Note.aes, Note.a, Note.beses, Note.bes, Note.b, Note.c)
-    val gExpected: Vector[Note] = Vector(Note.aes, Note.a, Note.bes, Note.b, Note.c, Note.des, Note.d, Note.dis, Note.ees, Note.e, Note.fes, Note.f, Note.fis, Note.g)
+    val cExpected: Vector[Note] = Vector(Note.c, Note.des, Note.d, Note.ees, Note.e, Note.f, Note.ges, Note.g, Note.gis, Note.aes, Note.a, Note.beses, Note.bes, Note.b, Note.c)
+    val gExpected: Vector[Note] = Vector(Note.g, Note.aes, Note.a, Note.bes, Note.b, Note.c, Note.des, Note.d, Note.dis, Note.ees, Note.e, Note.fes, Note.f, Note.fis, Note.g)
     val intervals = Interval.values.toVector
 
     val cObtained: Vector[Note] = intervals.map(interval => {

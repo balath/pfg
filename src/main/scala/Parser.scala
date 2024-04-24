@@ -11,7 +11,9 @@ import model.*
 import java.io.{File, FileOutputStream, FileWriter, ObjectOutputStream}
 
 object Parser extends IOApp:
-  
+
+  val r = new Random
+
   extension (cfs: Vector[ChordFigure])
     def zipWithOcurrences: Map[ChordFigure, Double] = cfs.groupMapReduce(identity)(_ => 1.0)(_ + _)
 
@@ -25,10 +27,11 @@ object Parser extends IOApp:
     lines <- readFromRawData(dataPath)
     chorales <- extractChorales(lines)
     (majorChorales, minorChorales): (Vector[Choral], Vector[Choral]) = chorales.partition(_.mode.equals(Mode.maj))
-    majModel <- processModel(majorChorales)
+    majorModel <- processModel(majorChorales)
     minorModel <- processModel(minorChorales)
     _ <- IO.println(s"${chorales.length} chorales parsed successfully")
-    >> writeModelToFile("models/major.model",majModel)
+      >> writeTextToFile(s"$outputPath/major${r.nextInt()}.ly", encodeToLilypond(majorModel.generateChoral(r, Note.c)))
+    //    >> writeModelToFile("models/major.model",majModel)
   } yield ExitCode.Success
 
   def writeModelToFile(path: String, model: Model): IO[Unit] =
@@ -37,6 +40,13 @@ object Parser extends IOApp:
         IO(new ObjectOutputStream(new FileOutputStream(path)))
       } { writer => IO(writer.close()).handleErrorWith(_ => IO.unit) }
       .use { writer => IO(writer.writeObject(model)) }
+
+  def writeTextToFile(path: String, choral: String): IO[Unit] =
+    Resource
+      .make {
+        IO(new FileWriter(path))
+      } { writer => IO(writer.close()).handleErrorWith(_ => IO.unit) }
+      .use { writer => IO(writer.write(choral)) }
 
   def readFromRawData(path: String): IO[Vector[String]] =
     Resource
@@ -116,7 +126,7 @@ object Parser extends IOApp:
       .zipWithOcurrences
       .map((cf, occurrences) => (cf, occurrences / semiphrases.length))
 
-    //TODO: Calculate semiphrases length distribution 
+    //TODO: Calculate semiphrases length distribution
     val (lengthsSum, minLength, maxLength): (Int, Int, Int) = semiphrases
       .foldLeft((0, Int.MaxValue, 0))((z, sp) => (z._1 + sp.length, sp.length.min(z._2), sp.length.max(z._3)))
     val averageLength = lengthsSum / semiphrases.length.toDouble
