@@ -43,7 +43,9 @@ jobs:
       run: |
         echo ${{ steps.getfile.outputs.files }}
     - name: Setup LilyPond
-      run: lilypond -V -fpdf -fmidi ${{ steps.getfile.outputs.files }}
+      run: |
+        lilypond -fpdf ${{ steps.getfile.outputs.files }}
+        lilypond -fmidi ${{ steps.getfile.outputs.files }}
     - name: Configure Git
       run: |
         git config --global user.email "sflor5@alumno.uned.es"
