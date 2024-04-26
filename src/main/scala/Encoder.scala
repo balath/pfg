@@ -24,7 +24,26 @@ def encodeToLilypond(choral: GeneratedChoral): String =
         .replace("_", "/")
     }\""
     ).mkString(" ")).mkString(" ")
-  val music = s"\\version \"2.24.3\"\n<<\n\\relative { \n${chords.dropRight(1).mkString(" ")} ${finalChord.replace("4\\fermata", s"$finalDuration\\fermata")}\n } \n \\addlyrics { \n$lyrics \n } \n>>"
+  val music =
+    s"""
+       |\\version \"2.24.3\"
+       |\\score {
+       |  \\new Staff {
+       |       <<
+       |         \\relative {
+       |             ${chords.dropRight(1).mkString(" ")} ${finalChord.replace("4\\fermata", s"$finalDuration\\fermata")}
+       |           }
+       |         \\addlyrics {
+       |             $lyrics
+       |           }
+       |       >>
+       |  }
+       |  \\layout {}
+       |  \\midi {
+       |     \\tempo 4 = 120
+       |  }
+       |}
+  """.stripMargin
   music
 
 

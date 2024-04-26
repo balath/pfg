@@ -10,7 +10,7 @@ case class Choral(num: Int, key: Note, mode: Mode, semiphrases: Vector[Semiphras
 case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
   def toLilypondFileFormat: String =
     val chords = semiphrases.flatMap(semiphrase =>
-      val start = s"\t${semiphrase.head.toString}4"
+      val start = s"\t${semiphrase.head.toStringWithOctave}4"
       val body = semiphrase.tail.dropRight(1).map(_.toString)
       val end = s"${semiphrase.last.toString}4\\fermata \n"
       start+:body:+end
@@ -28,11 +28,30 @@ case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
         .replace("aug","+")
         .replace("_","/")}\""
       ).mkString(" ")).mkString(" ")
-    val music = s"\\version \"2.24.3\"\n<<\n\\relative { \n${chords.dropRight(1).mkString(" ")} ${finalChord.replace("4\\fermata",s"$finalDuration\\fermata")}\n } \n \\addlyrics { \n$lyrics \n } \n>>"
+    val music = s"""
+              |\\version \"2.24.3\"
+              |\\score {
+              |  \\new Staff {
+              |       <<
+              |         \\relative {
+              |             ${chords.dropRight(1).mkString(" ")} ${finalChord.replace("4\\fermata",s"$finalDuration\\fermata")}
+              |           }
+              |         \\addlyrics {
+              |             $lyrics
+              |           }
+              |       >>
+              |  }
+              |  \\layout {}
+              |  \\midi {
+              |     \\tempo 4 = 120
+              |  }
+              |}
+    """.stripMargin
     music
 
 case class Chord(figure: ChordFigure, bass: Note, notes: Vector[Note]):
-  override def toString: String = s"<$bass' ${notes.mkString(" ")}>"
+  override def toString: String = s"<$bass ${notes.mkString(" ")}>"
+  def toStringWithOctave: String = s"<$bass' ${notes.mkString(" ")}>"
 
 enum Mode:
   case maj extends Mode
