@@ -40,7 +40,7 @@ def encodeToLilypond(choral: GeneratedChoral): String =
        |  }
        |  \\layout {}
        |  \\midi {
-       |     \\tempo 4 = 60
+       |     \\tempo 4 = 120
        |  }
        |}
   """.stripMargin

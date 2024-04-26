@@ -43,7 +43,7 @@ case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
               |  }
               |  \\layout {}
               |  \\midi {
-              |     \\tempo 4 = 60
+              |     \\tempo 4 = 120
               |  }
               |}
     """.stripMargin
