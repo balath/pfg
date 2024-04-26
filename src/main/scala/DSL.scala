@@ -51,7 +51,7 @@ case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
 
 case class Chord(figure: ChordFigure, bass: Note, notes: Vector[Note]):
   override def toString: String = s"<$bass ${notes.mkString(" ")}>"
-  def toStringWithOctave: String = s"<$bass' ${notes.mkString(" ")}>"
+  def toStringWithOctave: String = s"<$bass ${notes.mkString(" ")}>"
 
 enum Mode:
   case maj extends Mode
