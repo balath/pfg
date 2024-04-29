@@ -12,7 +12,7 @@ case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
     val chords = semiphrases.flatMap(semiphrase =>
       val start = s"\t${semiphrase.head.toStringWithOctave}4"
       val body = semiphrase.tail.dropRight(1).map(_.toString)
-      val end = 
+      val end =
         if midiFermataCode then s"${semiphrase.last.toString}2 r4\n"
         else s"${semiphrase.last.toString}4\\fermata \n"
       start+:body:+end
@@ -30,7 +30,7 @@ case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
         .replace("aug","+")
         .replace("_","/")}\""
       ).mkString(" ")).mkString(" ")
-    val midiCode = if midiFermataCode then "  midi {\n    \\tempo 4 = 60 \n  } " else ""
+    val midiCode = if midiFermataCode then "  \\midi {\n    \\tempo 4 = 60 \n  } " else ""
     val music = s"""
               |\\version \"2.24.3\"
               |\\score {
