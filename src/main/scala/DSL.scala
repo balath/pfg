@@ -30,6 +30,7 @@ case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
         .replace("aug","+")
         .replace("_","/")}\""
       ).mkString(" ")).mkString(" ")
+    val midiCode = if midiFermataCode then "  midi {\n    \\tempo 4 = 60 \n  } " else ""
     val music = s"""
               |\\version \"2.24.3\"
               |\\score {
@@ -44,9 +45,7 @@ case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
               |       >>
               |  }
               |  \\layout {}
-              |  \\midi {
-              |     \\tempo 4 = 60
-              |  }
+              |$midiCode
               |}
     """.stripMargin
     music
