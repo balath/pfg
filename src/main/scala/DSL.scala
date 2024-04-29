@@ -8,11 +8,13 @@ type Semiphrase = Vector[ChordFigure]
 case class Choral(num: Int, key: Note, mode: Mode, semiphrases: Vector[Semiphrase])
 
 case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
-  def toLilypondFileFormat: String =
+  def toLilypondFileFormat(midiFermataCode: Boolean): String =
     val chords = semiphrases.flatMap(semiphrase =>
       val start = s"\t${semiphrase.head.toStringWithOctave}4"
       val body = semiphrase.tail.dropRight(1).map(_.toString)
-      val end = s"${semiphrase.last.toString}4\\fermata \n"
+      val end = 
+        if midiFermataCode then s"${semiphrase.last.toString}2 r4\n"
+        else s"${semiphrase.last.toString}4\\fermata \n"
       start+:body:+end
     )
     val finalChord = chords.last

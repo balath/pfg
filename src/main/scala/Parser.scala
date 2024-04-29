@@ -29,8 +29,10 @@ object Parser extends IOApp:
     (majorChorales, minorChorales): (Vector[Choral], Vector[Choral]) = chorales.partition(_.mode.equals(Mode.maj))
     majorModel <- processModel(majorChorales)
     minorModel <- processModel(minorChorales)
+    sample = majorModel.generateChoral(r, Note.c)
     _ <- IO.println(s"${chorales.length} chorales parsed successfully")
-      >> writeTextToFile(s"$outputPath/major${r.nextInt()}.ly", majorModel.generateChoral(r, Note.c).toLilypondFileFormat)
+      >> writeTextToFile(s"$outputPath/pdf-major${r.nextInt()}.ly", sample.toLilypondFileFormat(false))
+      >> writeTextToFile(s"$outputPath/midi-major${r.nextInt()}.ly", sample.toLilypondFileFormat(true))
     //    >> writeModelToFile("models/major.model",majModel)
   } yield ExitCode.Success
 
