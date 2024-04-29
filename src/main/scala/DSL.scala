@@ -33,7 +33,7 @@ case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
               |\\score {
               |  \\new Staff {
               |       <<
-              |         \\relative {
+              |         \\fixed c' {
               |             ${chords.dropRight(1).mkString(" ")} ${finalChord.replace("4\\fermata",s"$finalDuration\\fermata")}
               |           }
               |         \\addlyrics {
