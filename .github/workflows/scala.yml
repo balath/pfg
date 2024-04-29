@@ -45,7 +45,6 @@ jobs:
     - name: Setup LilyPond
       run: |
         lilypond -fpdf ${{ steps.getfile.outputs.files }}
-        lilypond -fmidi ${{ steps.getfile.outputs.files }}
     - name: Configure Git
       run: |
         mv *.midi output/midi
