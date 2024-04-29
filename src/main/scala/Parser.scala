@@ -30,7 +30,7 @@ object Parser extends IOApp:
     majorModel <- processModel(majorChorales)
     minorModel <- processModel(minorChorales)
     _ <- IO.println(s"${chorales.length} chorales parsed successfully")
-      >> writeTextToFile(s"$outputPath/major${r.nextInt()}.ly", encodeToLilypond(majorModel.generateChoral(r, Note.c)))
+      >> writeTextToFile(s"$outputPath/major${r.nextInt()}.ly", majorModel.generateChoral(r, Note.c).toLilypondFileFormat)
     //    >> writeModelToFile("models/major.model",majModel)
   } yield ExitCode.Success
 

@@ -2,7 +2,7 @@ package generator
 
 import cats.effect.{ExitCode, IO, IOApp, Resource}
 import common.DataRegex.{dataPath, modelsPath, outputPath}
-import dsl.{Choral, Mode, Note, encodeToLilypond}
+import dsl.{Choral, Mode, Note}
 import model.Model
 
 import java.io.{FileInputStream, FileOutputStream, FileWriter, ObjectInputStream, ObjectOutputStream}
@@ -16,7 +16,7 @@ object Generator extends IOApp {
 
   val program = for {
     majorModel <- readModelFromFile(s"${modelsPath}major.model")
-    _ <- writeTextToFile(s"$outputPath/major${r.nextInt()}.ly", encodeToLilypond(majorModel.generateChoral(r, Note.c)))
+    _ <- writeTextToFile(s"$outputPath/major${r.nextInt()}.ly", majorModel.generateChoral(r, Note.c).toLilypondFileFormat)
     //      >> writeTextToFile(s"$outputPath/minor${r.nextInt()}.ly", encodeToLilypond(minorModel.generateChoral(r, Note.c)))
   } yield ExitCode.Success
 
