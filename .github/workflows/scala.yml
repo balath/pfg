@@ -48,8 +48,10 @@ jobs:
         lilypond -fmidi ${{ steps.getfile.outputs.files }}
     - name: Configure Git
       run: |
+        mv *.midi output/midi
+        mv *.pdf output/pdf
         git config --global user.email "sflor5@alumno.uned.es"
         git config --global user.name "balath"
         git add .
-        git commit -m "Add action files"
+        git commit -m "Add output files"
         git push
