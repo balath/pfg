@@ -1,7 +1,7 @@
 import munit.FunSuite
 import dsl._
 
-class DSLTest extends FunSuite{
+class DSLTest extends FunSuite {
 
   //    Clue for one by one interval test
   //    val clue = s"Wrong ${interval.toString} interval for ${note.toString}: expected ${expected.toString} but obtained ${obtained.toString}"
@@ -26,7 +26,7 @@ class DSLTest extends FunSuite{
   val minorModesNotes = for {
     mode <- majorModesNotes
     (a, b) = mode.splitAt(5)
-  } yield b++a
+  } yield b ++ a
 
   test("Perfect and majors intervals on major modes tonics should result on major mode notes") {
     val majorAndPerfectIntervals = Vector(Interval.maj2, Interval.maj3, Interval.perf5, Interval.maj7)
@@ -47,29 +47,42 @@ class DSLTest extends FunSuite{
   }
 
   test("Intervals over c and over g are properly obtained") {
-    val cExpected: Vector[Note] = Vector(Note.c, Note.des, Note.d, Note.ees, Note.e, Note.f, Note.ges, Note.g, Note.gis, Note.aes, Note.a, Note.beses, Note.bes, Note.b, Note.c)
-    val gExpected: Vector[Note] = Vector(Note.g, Note.aes, Note.a, Note.bes, Note.b, Note.c, Note.des, Note.d, Note.dis, Note.ees, Note.e, Note.fes, Note.f, Note.fis, Note.g)
+    val cExpected: Vector[Note] = Vector(Note.c, Note.des, Note.d, Note.dis, Note.ees, Note.e, Note.fes, Note.f, Note.fis, Note.ges, Note.g, Note.gis, Note.aes, Note.a, Note.beses, Note.bes, Note.b, Note.c)
+    val gExpected: Vector[Note] = Vector(Note.g, Note.aes, Note.a, Note.ais, Note.bes, Note.b, Note.ces, Note.c, Note.cis, Note.des, Note.d, Note.dis, Note.ees, Note.e, Note.fes, Note.f, Note.fis, Note.g)
     val intervals = Interval.values.toVector
 
-    val cObtained: Vector[Note] = intervals.map(interval => {
-      val note = Note.c.interval(interval)
-      println(s"An $interval over c is a $note")
-      note
-    })
-    val gObtained: Vector[Note] = intervals.map(interval => {
-      val note = Note.g.interval(interval)
-      println(s"An $interval over g is a $note")
-      note
-    })
+    val cObtained: Vector[Note] = intervals.map(Note.c.interval)
+    val gObtained: Vector[Note] = intervals.map(Note.g.interval)
     cObtained.zip(cExpected).foreach(tuple => assertEquals(tuple._1, tuple._2))
     gObtained.zip(gExpected).foreach(tuple => assertEquals(tuple._1, tuple._2))
   }
 
   test("Chords are created properly") {
     import ChordFigure._, Note._
-    val chords = Vector(iv_v, viidis43_v, v6, v, iisemdis65_v, V65_v, iisemdis6_v,V7_v,V)
-    val expectedChords = Vector(Chord(iv_v,c,Vector(ees,g,c)), Chord(viidis43_v,c,Vector(ees,fis,a)), Chord(v6,bes,Vector(d,g,g)), Chord(v,g,Vector(bes,d,g)), Chord(iisemdis65_v,c,Vector(ees,g,a)), Chord(V65_v,fis,Vector(a,c,d)), Chord(iisemdis6_v,c,Vector(ees,g,a)), Chord(V7_v,d,Vector(fis,a,c)), Chord(V,g,Vector(b,d,g)))
-    chords.map(c.chord(_)).zip(expectedChords).foreach((obtained,expected) => assert(obtained.equals(expected),s"At chord ${obtained.figure}, when expected $expected is obtained: $obtained"))
+    val chords = Vector(iv_v, viidis43_v, v6, v, iisemdis65_v, V65_v, iisemdis6_v, V7_v, V)
+    val expectedChords = Vector(Chord(iv_v, c, Vector(ees, g, c)), Chord(viidis43_v, c, Vector(ees, fis, a)), Chord(v6, bes, Vector(d, g, g)), Chord(v, g, Vector(bes, d, g)), Chord(iisemdis65_v, c, Vector(ees, g, a)), Chord(V65_v, fis, Vector(a, c, d)), Chord(iisemdis6_v, c, Vector(ees, g, a)), Chord(V7_v, d, Vector(fis, a, c)), Chord(V, g, Vector(b, d, g)))
+    chords.map(c.chord).zip(expectedChords).foreach((obtained, expected) => assert(obtained.equals(expected), s"At chord ${obtained.figure}, when expected $expected is obtained: $obtained"))
   }
 
+  test("Bass notes with octave are detected in its range or out of it") {
+    val e2 = NoteWithOctave(Note.e, Octave._2)
+    val dis2 = NoteWithOctave(Note.dis, Octave._2)
+    val c3 = NoteWithOctave(Note.c, Octave._3)
+    val c4 = NoteWithOctave(Note.c, Octave._4)
+    val cis4 = NoteWithOctave(Note.cis, Octave._4)
+
+    assert(e2.isInRange(VoiceBounds.bass))
+    assert(c3.isInRange(VoiceBounds.bass))
+    assert(c4.isInRange(VoiceBounds.bass))
+    assert(!dis2.isInRange(VoiceBounds.bass))
+    assert(!cis4.isInRange(VoiceBounds.bass))
+  }
+
+  test("Inverse intervals are returned properly") {
+    Interval.values.foreach(interval => assertEquals(interval, interval.inverse.inverse))
+    Interval.values.map(i => (i.semitones + i.inverse.semitones, i.diatonic + i.inverse.diatonic)).foreach { tuple =>
+      assertEquals(tuple._1, 12)
+      assertEquals(tuple._2, 9)
+    }
+  }
 }

@@ -15,7 +15,10 @@ object Generator extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = program
 
   val program = for {
-    majorModel <- readModelFromFile(s"${modelsPath}major.model")
+    model <- readModelFromFile(s"${modelsPath}minor.model")
+    sample = model.generateChoral(r, Note.c)
+    _ <- IO.println(harmonizeChoral(sample).toLilypondFileFormat(true))
+    _ <- IO.println(harmonizeChoral(sample).toLilypondFileFormat(false))
 //    _ <- writeTextToFile(s"$outputPath/major${r.nextInt()}.ly", majorModel.generateChoral(r, Note.c).toLilypondFileFormat)
 //          >> writeTextToFile(s"$outputPath/minor${r.nextInt()}.ly", encodeToLilypond(minorModel.generateChoral(r, Note.c)))
   } yield ExitCode.Success
