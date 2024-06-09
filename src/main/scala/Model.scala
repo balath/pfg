@@ -7,7 +7,7 @@ import scala.util.{Failure, Random, Success, Try}
 type SelectionTuple = (Double, ChordFigure)
 type SelectionWheel = Vector[SelectionTuple]
 type FirstOrderTransitions = Map[ChordFigure, SelectionWheel]
-type SecondOrderTransitions = Map[ChordFigure, Map[ChordFigure, SelectionWheel]]
+type SecondOrderTransitions = Map[ChordFigure, FirstOrderTransitions]
 
 extension (sw: SelectionWheel)
   def toDataStructureCode: String =
@@ -107,7 +107,7 @@ case class Model(initialSemiphrase: SemiphraseModel,
     println(s"Final semiphrase generated: $last")
 
     val choral = initial +: middleSection :+ last
-    GeneratedChoral(choral.map(_.map(key.chord(_))))
+    GeneratedChoral(choral map (_ map (key chord _)))
 
   def genFirstChord(model: SemiphraseModel, previousSemiphraseEnding: Option[ChordFigure])(r: Random): ChordFigure =
     previousSemiphraseEnding match
@@ -142,7 +142,7 @@ case class Model(initialSemiphrase: SemiphraseModel,
     false
 
   def generateSemiphrases(model: SemiphraseModel, previousSemiphraseEnding: Option[ChordFigure])(r: Random): Vector[ChordFigure] =
-    def rec(previousChords: (ChordFigure, ChordFigure), acc: Vector[ChordFigure], end: Boolean): Vector[ChordFigure] = end match
+    def genChordFigures(previousChords: (ChordFigure, ChordFigure), acc: Vector[ChordFigure], end: Boolean): Vector[ChordFigure] = end match
       case true => acc
       case false =>
         val nextChordDistribution = Try(model.transitions(previousChords._1)(previousChords._2))
@@ -153,11 +153,11 @@ case class Model(initialSemiphrase: SemiphraseModel,
           case Success(nCD) =>
             val nextChord = nCD.find((prob, chord) => r.nextDouble() <= prob).getOrElse(nCD.last)._2
             val endNow = endSemiphrase(model, acc.size + 1, model.endingChords.getOrElse(nextChord, 0.0), nextChord)(r)
-            rec((previousChords._2, nextChord), acc :+ nextChord, endNow)
+            genChordFigures((previousChords._2, nextChord), acc :+ nextChord, endNow)
 
     println(s"Semiphrase model lengths: min=${model.minLength}, max=${model.maxLength}")
     val cf1 = genFirstChord(model, previousSemiphraseEnding)(r)
     val cf2 = genSecondChord(model, cf1)(r)
-    rec((cf1, cf2), Vector(cf1, cf2), false)
+    genChordFigures((cf1, cf2), Vector(cf1, cf2), false)
 
 end Model

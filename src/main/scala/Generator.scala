@@ -4,7 +4,7 @@ import cats.effect.{ExitCode, IO, IOApp, Resource}
 import common.DataRegex.{dataPath, modelsPath, outputPath}
 import dsl.{Choral, Mode, Note}
 import model.Model
-
+import scala.sys.process._
 import java.io.{FileInputStream, FileOutputStream, FileWriter, ObjectInputStream, ObjectOutputStream}
 import scala.util.Random
 
@@ -17,10 +17,11 @@ object Generator extends IOApp {
   val program = for {
     model <- readModelFromFile(s"${modelsPath}minor.model")
     sample = model.generateChoral(r, Note.c)
-    _ <- IO.println(harmonizeChoral(sample).toLilypondFileFormat(true))
-    _ <- IO.println(harmonizeChoral(sample).toLilypondFileFormat(false))
-//    _ <- writeTextToFile(s"$outputPath/major${r.nextInt()}.ly", majorModel.generateChoral(r, Note.c).toLilypondFileFormat)
-//          >> writeTextToFile(s"$outputPath/minor${r.nextInt()}.ly", encodeToLilypond(minorModel.generateChoral(r, Note.c)))
+//    _ <- IO.println(harmonizeChoral(sample).toLilypondFileFormat(true))
+//    _ <- IO.println(harmonizeChoral(sample).toLilypondFileFormat(false))
+    path <- IO(s"$outputPath/sample${r.nextInt()}.ly")
+    _ <- writeTextToFile(path, harmonizeChoral(sample).toLilypondFileFormat(true))
+    _ <- IO(s"lilypond -fpdf $path".!!)
   } yield ExitCode.Success
 
   def readModelFromFile(path: String): IO[Model] =

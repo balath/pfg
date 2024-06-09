@@ -1,11 +1,8 @@
 package dsl
-
 import common.DataRegex.*
-
 import scala.util.{Failure, Success, Try}
 
 type Semiphrase = Vector[ChordFigure]
-
 case class HarmonizedChord(bass: NoteWithOctave, tenor: NoteWithOctave, contra: NoteWithOctave, treble: NoteWithOctave)
 case class HarmonizedSemiphrase(semiphrase: Vector[HarmonizedChord]):
   def voiceToString(voice: Vector[NoteWithOctave], midiFermataCode: Boolean, finalDuration: String): String =
@@ -130,7 +127,6 @@ case object NoteWithOctave:
   def lowestOctaveInRange(note: Note, voiceBounds: VoiceBounds): NoteWithOctave =
     Octave.values.map(octave => NoteWithOctave(note, octave)).filter(_.isInRange(voiceBounds)).minBy(_.absolutPitch)
 
-
 case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
   def toLilypondFileFormat(midiFermataCode: Boolean): String =
     val chords = semiphrases.flatMap(semiphrase =>
@@ -180,7 +176,6 @@ case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
 case class Chord(figure: ChordFigure, bass: Note, notes: Vector[Note]):
   override def toString: String = s"<$bass ${notes.mkString(" ")}>"
 
-
 enum Mode:
   case maj extends Mode
   case min extends Mode
@@ -206,6 +201,12 @@ enum Octave(val octave: Int, val lilypondCode: String):
 
 end Octave
 
+case object Octave:
+  def apply(n: Int): Octave = n match
+    case n if n <= 2 => _2
+    case 3 => _3
+    case 4 => _4
+    case n if n >= 5 => _5
 
 /**
  * Musical notes are named according to the LylyPond standard for english (https://lilypond.org/):
@@ -283,6 +284,9 @@ enum Note(val pitch: Int):
       case Success(6) | Success(65) => Chord(chordFigure, third, Vector(fifth, treble, tonic))
       case Success(64) | Success(43) => Chord(chordFigure, fifth, Vector(treble, tonic, third))
       case Success(42) => Chord(chordFigure, treble, Vector(tonic, third, fifth))
+  def inOctave(n: Int): NoteWithOctave = NoteWithOctave(this, Octave(n))
+
+  def grade(grade: Grade): Note = this interval grade.interval
 
 end Note
 
@@ -290,7 +294,6 @@ enum Kind:
   case semdis extends Kind
   case dis extends Kind
   case aug extends Kind
-
 
 enum Grade(val interval: Interval, val mode: Mode):
   case I extends Grade(Interval.unis, Mode.maj)
@@ -310,8 +313,6 @@ enum Grade(val interval: Interval, val mode: Mode):
   case bvii extends Grade(Interval.min7, Mode.min)
   case vii extends Grade(Interval.maj7, Mode.min)
 end Grade
-
-val a: Note = Note.b
 
 enum Interval(val diatonic: Int, val semitones: Int):
   case unis extends Interval(1, 0)

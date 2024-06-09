@@ -35,16 +35,16 @@ jobs:
         cache: 'sbt'
     - name: Run
       run: sbt run
-    - name: Get changed files
-      id: getfile
-      run: |
-        echo "::set-output name=files::$(find ${{github.workspace}} -name "${{ env.LILYPOND_FILES }}" -printf "%P\n" | xargs)"
-    - name: LILYPOND files considered echo output
-      run: |
-        echo ${{ steps.getfile.outputs.files }}
-    - name: Setup LilyPond
-      run: |
-        lilypond -fpdf ${{ steps.getfile.outputs.files }}
+#    - name: Get changed files
+#      id: getfile
+#      run: |
+#        echo "::set-output name=files::$(find ${{github.workspace}} -name "${{ env.LILYPOND_FILES }}" -printf "%P\n" | xargs)"
+#    - name: LILYPOND files considered echo output
+#      run: |
+#        echo ${{ steps.getfile.outputs.files }}
+#    - name: Setup LilyPond
+#      run: |
+#        lilypond -fpdf ${{ steps.getfile.outputs.files }}
     - name: Configure Git
       run: |
         mv *.midi output/midi
