@@ -20,4 +20,9 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic" % "0.14.7"
 )
 enablePlugins(JavaAppPackaging)
+
+assembly / mainClass := Some("generator.GeneratorService")
+
+assembly / assemblyJarName := "bach-machine.jar"
+
 Compile / run / mainClass := Some("generator.GeneratorService")
