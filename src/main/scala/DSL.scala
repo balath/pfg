@@ -66,7 +66,7 @@ case class HarmonizedChoral(semiphrases: Vector[HarmonizedSemiphrase], choralFig
     val midiCode = if midiFermataCode then "  \\midi {\n    \\tempo 4 = 60 \n  } " else ""
     val music =
       s"""
-         |\\version \"2.22.2\"
+         |\\version \"2.18.2\"
          |\\score {
          |    <<
          |         \\new Staff << \\clef \"treble\"
