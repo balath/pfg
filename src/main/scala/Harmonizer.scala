@@ -118,8 +118,7 @@ def generateHarmonizedSemiphrase(bassLine: Vector[NoteWithOctave], semiphrase: G
            acc: Vector[HarmonizedChord],
            recLevel: Int
          ): LazyList[HarmonizedSemiphrase] =
-    def indentCalc(n: Int): String = if n == 0 then "" else s"  ${indentCalc(n - 1)}"
-    val indent = indentCalc(recLevel)
+    val indent = "  ".repeat(recLevel)
     (bassLine, chords) match {
       case (bass +: bs, chord +: cs) =>
         val tenorNotes = chord.notes orderByNearness(lastHarmonizedChord.tenor.absolutPitch, VoiceRange.tenor)
