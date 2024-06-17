@@ -12,7 +12,7 @@ import fs2.io.file.Path
 import org.http4s.circe.CirceEntityCodec.*
 import io.circe.generic.auto.*
 
-import scala.util.{Random, Try}
+import scala.util.{Failure, Random, Success, Try}
 import scala.sys.process.stringToProcess
 import java.io.{FileInputStream, FileWriter, ObjectInputStream}
 
@@ -36,10 +36,15 @@ object GeneratorService extends IOApp {
           val choral = model.generateChoral(r, key)
           writeTextToFile(lilypondToPdfPath, harmonizeChoral(choral).toLilypondFileFormat(false))
           writeTextToFile(lilypondToMidiPath, harmonizeChoral(choral).toLilypondFileFormat(true))
+        }
+        val lilypondProcessed = Try {
           s"lilypond -fpdf $lilypondToPdfPath $lilypondToMidiPath".!!
         }
-        if generation.isSuccess then Ok(FileUrls(pdf = pdfId, midi = midId))
-        else InternalServerError("Failed to generate choral")
+        (generation, lilypondProcessed) match {
+          case (Success(_), Success(_)) =>  Ok (FileUrls (pdf = pdfId, midi = midId))
+          case (Success(_), Failure(_)) => InternalServerError ("Failed at processing generated choral with Lilypond")
+          case (Failure(_), _) => InternalServerError ("Failed at generating choral")
+        }
 
       case request@GET -> Root / "midi" / fileId =>
         StaticFile.fromPath(Path(s"choral$fileId.mid"), Some(request)).getOrElseF(NotFound())
