@@ -1,9 +1,13 @@
 package dsl
 import common.DataRegex.*
+
+import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
 type Semiphrase = Vector[ChordFigure]
-case class HarmonizedChord(bass: NoteWithOctave, tenor: NoteWithOctave, contra: NoteWithOctave, treble: NoteWithOctave)
+type GeneratedSemiphrase = Vector[Chord]
+case class HarmonizedChord(bass: NoteWithOctave, tenor: NoteWithOctave, contra: NoteWithOctave, treble: NoteWithOctave):
+  override def toString: String = s"<$bass $tenor $contra $treble>"
 case class HarmonizedSemiphrase(semiphrase: Vector[HarmonizedChord]):
   def voiceToString(voice: Vector[NoteWithOctave], midiFermataCode: Boolean, finalDuration: String): String =
     val start = s"\t${voice.head}4"
@@ -62,16 +66,16 @@ case class HarmonizedChoral(semiphrases: Vector[HarmonizedSemiphrase], choralFig
     val midiCode = if midiFermataCode then "  \\midi {\n    \\tempo 4 = 60 \n  } " else ""
     val music =
       s"""
-         |\\version \"2.24.1\"
+         |\\version \"2.22.2\"
          |\\score {
          |    <<
          |         \\new Staff << \\clef \"treble\"
-         |            \\new Voice = \"treble\" { \\voiceOne $trebleLine }
-         |            \\new Voice = \"contra\" { \\voiceTwo $contraLine }
+         |            \\new Voice = \"treble\" { \\set Staff.midiInstrument = #"choir aahs" \\voiceOne $trebleLine }
+         |            \\new Voice = \"contra\" { \\set Staff.midiInstrument = #"choir aahs" \\voiceTwo $contraLine }
          |         >>
          |         \\new Staff << \\clef \"bass\"
-         |            \\new Voice = \"tenor\" { \\voiceOne $tenorLine }
-         |            \\new Voice = \"bass\" { \\voiceTwo $bassLine }
+         |            \\new Voice = \"tenor\" { \\set Staff.midiInstrument = #"choir aahs" \\voiceOne $tenorLine }
+         |            \\new Voice = \"bass\" { \\set Staff.midiInstrument = #"choir aahs" \\voiceTwo $bassLine }
          |         \\new Lyrics \\lyricsto "bass" { $lyrics }
          |         >>
          |    >>
@@ -83,48 +87,50 @@ case class HarmonizedChoral(semiphrases: Vector[HarmonizedSemiphrase], choralFig
 
 case class Choral(num: Int, key: Note, mode: Mode, semiphrases: Vector[Semiphrase])
 
-enum VoiceBounds(val lower: NoteWithOctave, val upper: NoteWithOctave):
-  case bass extends VoiceBounds(NoteWithOctave(Note.e, Octave._2), NoteWithOctave(Note.c, Octave._4))
-  case tenor extends VoiceBounds(NoteWithOctave(Note.e, Octave._3), NoteWithOctave(Note.g, Octave._4))
-  case contra extends VoiceBounds(NoteWithOctave(Note.g, Octave._3), NoteWithOctave(Note.d, Octave._5))
-  case treble extends VoiceBounds(NoteWithOctave(Note.d, Octave._4), NoteWithOctave(Note.g, Octave._5))
-
-  def absoluteUpper: Int = upper.note.pitch + (12 * (upper.octave.octave - 2))
-
-  def absoluteLower: Int = lower.note.pitch + (12 * (lower.octave.octave - 2))
+enum VoiceRange(val lowerBound: NoteWithOctave, val upperBound: NoteWithOctave, val middleNote: NoteWithOctave):
+  case bass extends VoiceRange(NoteWithOctave(Note.e, Octave._2), NoteWithOctave(Note.c, Octave._4), NoteWithOctave(Note.d, Octave._3))
+  case tenor extends VoiceRange(NoteWithOctave(Note.e, Octave._3), NoteWithOctave(Note.g, Octave._4),NoteWithOctave(Note.a, Octave._3))
+  case contra extends VoiceRange(NoteWithOctave(Note.g, Octave._3), NoteWithOctave(Note.d, Octave._5), NoteWithOctave(Note.e, Octave._4))
+  case treble extends VoiceRange(NoteWithOctave(Note.d, Octave._4), NoteWithOctave(Note.g, Octave._5), NoteWithOctave(Note.a, Octave._4))
+  def absoluteUpper: Int = upperBound.note.pitch + (12 * (upperBound.octave.octave - 2))
+  def absoluteLower: Int = lowerBound.note.pitch + (12 * (lowerBound.octave.octave - 2))
 
 case class NoteWithOctave(note: Note, octave: Octave):
+  infix def -(that: NoteWithOctave): Int = this.absolutPitch - that.absolutPitch
   def absolutPitch: Int = note.pitch + (12 * (octave.octave - 2))
-
-  def isInRange(bounds: VoiceBounds): Boolean =
+  def isInRange(bounds: VoiceRange): Boolean =
     val upper = absolutPitch <= bounds.absoluteUpper
     val lower = absolutPitch >= bounds.absoluteLower
     upper && lower
-
-  def nearestNoteInRange(note: Note, voiceBounds: VoiceBounds): NoteWithOctave =
+  def nearestNoteInRange(note: Note, voiceBounds: VoiceRange): NoteWithOctave =
     Vector(Octave._2, Octave._3, Octave._4, Octave._5)
       .map(NoteWithOctave(note, _))
       .filter(_.isInRange(voiceBounds))
       .minBy(nwo => math.abs(this.absolutPitch - nwo.absolutPitch))
-  def nearestNoteInRangeFromChord(notes: Vector[Note], voiceBounds: VoiceBounds): NoteWithOctave =
+  def nearestNoteInRangeFromChord(chord: Chord, voiceBounds: VoiceRange): NoteWithOctave =
     Vector(Octave._2, Octave._3, Octave._4, Octave._5)
-      .flatMap(octave => notes.map(NoteWithOctave(_, octave)))
+      .flatMap(octave => chord.notes.map(NoteWithOctave(_, octave)))
       .filter(_.isInRange(voiceBounds))
       .distinct
       .minBy(nwo => math.abs(this.absolutPitch - nwo.absolutPitch))
-
   def lowerOctave: NoteWithOctave = NoteWithOctave(note, octave.lowerOctave)
-
   def upperOctave: NoteWithOctave = NoteWithOctave(note, octave.upperOctave)
-
+  def getInterval(that: NoteWithOctave): Interval =
+    if (this.note.getInterval(that.note) equals Interval.unis) && (this.octave - that.octave != 0) then Interval.perf8
+    else this.note.getInterval(that.note)
   override def toString: String = s"$note${octave.lilypondCode}"
-
   override def equals(obj: Any): Boolean = obj match
     case that: NoteWithOctave => this.note.equals(that.note) && this.octave.equals(that.octave)
     case _ => false
 end NoteWithOctave
 case object NoteWithOctave:
-  def lowestOctaveInRange(note: Note, voiceBounds: VoiceBounds): NoteWithOctave =
+  def nearestNoteInRangeFromChord(pitch: Int, notes: Vector[Note], voiceBounds: VoiceRange): NoteWithOctave =
+    Vector(Octave._2, Octave._3, Octave._4, Octave._5)
+      .flatMap(octave => notes.map(NoteWithOctave(_, octave)))
+      .filter(_.isInRange(voiceBounds))
+      .distinct
+      .minBy(nwo => math.abs(pitch - nwo.absolutPitch))
+  def lowestOctaveInRange(note: Note, voiceBounds: VoiceRange): NoteWithOctave =
     Octave.values.map(octave => NoteWithOctave(note, octave)).filter(_.isInRange(voiceBounds)).minBy(_.absolutPitch)
 
 case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
@@ -173,8 +179,19 @@ case class GeneratedChoral(semiphrases: Vector[Vector[Chord]]):
     """.stripMargin
     music
 
-case class Chord(figure: ChordFigure, bass: Note, notes: Vector[Note]):
+case class Chord(figure: ChordFigure, bass: Note, tonic: Note, third: Note, fifth: Note, seventh: Option[Note], notes: Vector[Note]):
   override def toString: String = s"<$bass ${notes.mkString(" ")}>"
+
+extension (notes: Vector[Note])
+  infix def -(note: Note): Vector[Note] = notes.filter(!_.equals(note))
+  infix def +(note: Note): Vector[Note] = note +: notes
+  infix def orderByNearness(pitch: Int, range: VoiceRange): Vector[NoteWithOctave] =
+    def rec(tail: Vector[Note], acc: Vector[NoteWithOctave]): Vector[NoteWithOctave] = tail match
+      case Vector() => acc
+      case _ =>
+        val nearestNote = NoteWithOctave.nearestNoteInRangeFromChord(pitch, tail, range)
+        rec(tail - nearestNote.note, acc :+ nearestNote)
+    rec(notes, Vector())
 
 enum Mode:
   case maj extends Mode
@@ -187,6 +204,7 @@ enum Octave(val octave: Int, val lilypondCode: String):
   case _4 extends Octave(4, "'")
   case _5 extends Octave(5, "''")
 
+  infix def -(that: Octave): Int = this.octave - that.octave
   def upperOctave: Octave = this match
     case Octave._2 => Octave._3
     case Octave._3 => Octave._4
@@ -260,30 +278,37 @@ enum Note(val pitch: Int):
     val newPitchNotes = Note.values.filter(_.pitch == newPitch)
     newPitchNotes.find(_.toString.startsWith(newNoteName)).getOrElse(newPitchNotes.head)
 
+  def getInterval(that: Note): Interval =
+    val diatonicInterval = (
+      (diatonicScaleNoteNum(that.toString.substring(0,1)) + 7) - diatonicScaleNoteNum(this.toString.substring(0, 1))
+      ) % 7 + 1
+    val chromaticInterval = ((that.pitch + 12) - this.pitch) % 12
+    Interval.values.toVector.filter(i => i.diatonic == diatonicInterval && i.semitones == chromaticInterval).head
   def chord(chordFigure: ChordFigure): Chord =
     import Interval._, Mode._
     val (grade, kind, inversion, base) = chordFigure.toString match
       case chordRegex(g, k, i, b) => (Grade.valueOf(g), Try(Kind.valueOf(k)), Try(i.toInt), Try(Grade.valueOf(b)))
     //    println(s"Grade = $grade, Kind = $kind, Inversion = $inversion, Base = $base")
     val tonic = if base.isSuccess then this.interval(base.get.interval).interval(grade.interval) else this.interval(grade.interval)
-    val third = if grade.mode.equals(min) then tonic.interval(min3) else tonic.interval(maj3)
+    val third = if grade.mode.equals(min) then tonic interval min3 else tonic interval maj3
     val fifth = kind match
-      case Failure(_) => tonic.interval(perf5)
-      case Success(Kind.semdis) | Success(Kind.dis) => tonic.interval(dis5)
-      case Success(Kind.aug) => tonic.interval(aug5)
-    val treble = if kind.getOrElse(Kind.dis).equals(Kind.semdis) then tonic.interval(min7)
-    else if inversion.isFailure then tonic
+      case Failure(_) => tonic interval perf5
+      case Success(Kind.semdis) | Success(Kind.dis) => tonic interval dis5
+      case Success(Kind.aug) => tonic interval aug5
+    val seventh: Option[Note] = if kind.getOrElse(Kind.dis).equals(Kind.semdis) then Some(tonic interval min7)
+    else if inversion.isFailure then None
     else inversion.get match
-      case 6 | 64 => tonic
+      case 6 | 64 => None
       case 7 | 65 | 43 | 42 =>
-        if kind.getOrElse(Kind.semdis).equals(Kind.dis) then tonic.interval(dis7)
-        else if grade.mode.equals(min) || grade.equals(Grade.V) || grade.equals(Grade.bVII) then tonic.interval(min7)
-        else tonic.interval(maj7)
+        if kind.getOrElse(Kind.semdis).equals(Kind.dis) then Some(tonic interval dis7)
+        else if grade.mode.equals(min) || grade.equals(Grade.V) || grade.equals(Grade.bVII) then Some(tonic interval min7)
+        else Some(tonic interval maj7)
+    val notes = if seventh isDefined then Vector(tonic, third, fifth, seventh.get) else Vector(tonic, third, fifth)
     inversion match
-      case Failure(_) | Success(7) => Chord(chordFigure, tonic, Vector(third, fifth, treble))
-      case Success(6) | Success(65) => Chord(chordFigure, third, Vector(fifth, treble, tonic))
-      case Success(64) | Success(43) => Chord(chordFigure, fifth, Vector(treble, tonic, third))
-      case Success(42) => Chord(chordFigure, treble, Vector(tonic, third, fifth))
+      case Failure(_) | Success(7) => Chord(chordFigure, tonic, tonic, third, fifth, seventh, notes)
+      case Success(6) | Success(65) => Chord(chordFigure, third, tonic, third, fifth, seventh, notes)
+      case Success(64) | Success(43) => Chord(chordFigure, fifth, tonic, third, fifth, seventh, notes)
+      case Success(42) => Chord(chordFigure, seventh.get, tonic, third, fifth, seventh, notes)
   def inOctave(n: Int): NoteWithOctave = NoteWithOctave(this, Octave(n))
 
   def grade(grade: Grade): Note = this interval grade.interval
@@ -316,6 +341,7 @@ end Grade
 
 enum Interval(val diatonic: Int, val semitones: Int):
   case unis extends Interval(1, 0)
+  case augUnis extends Interval(1, 1)
   case min2 extends Interval(2, 1)
   case maj2 extends Interval(2, 2)
   case aug2 extends Interval(2, 3)
@@ -333,7 +359,7 @@ enum Interval(val diatonic: Int, val semitones: Int):
   case min7 extends Interval(7, 10)
   case maj7 extends Interval(7, 11)
   case perf8 extends Interval(8, 12)
-
+  def isFifthOrEighth: Boolean = this.diatonic == 5 || this.diatonic == 8
   def inverse: Interval = this match
     case Interval.unis => perf8
     case Interval.min2 => maj7
@@ -355,6 +381,14 @@ enum Interval(val diatonic: Int, val semitones: Int):
     case Interval.perf8 => unis
 
 end Interval
+object Interval:
+  def unapply(interval: Interval): Option[(Int, Int)] =
+    Some((interval.diatonic, interval.semitones))
+
+enum IntervalDirection:
+  case asc extends IntervalDirection
+  case desc extends IntervalDirection
+  def isCounterMovementTo(that: IntervalDirection): Boolean = !this.equals(that)
 
 enum ChordFigure:
   case Empty extends ChordFigure

@@ -29,19 +29,6 @@ jobs:
       with:
         java-version: '11'
         distribution: 'adopt'
-    - name: Cache SBT dependencies
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.ivy2/cache
-          ~/.sbt
-        key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
-        restore-keys: ${{ runner.os }}-sbt-
-    - name: Cache coursier
-      uses: actions/cache@v2
-      with:
-        path: ~/.cache/coursier
-        key: coursier-${{ hashFiles('**/build.sbt') }}
     - uses: codello/setup-lilypond@v0.1.0
       with:
         lilypond-version: 2.24
@@ -52,17 +39,19 @@ jobs:
         distribution: 'temurin'
         cache: 'sbt'
     - name: Run
-      run: sbt run
-#    - name: Get changed files
-#      id: getfile
-#      run: |
-#        echo "::set-output name=files::$(find ${{github.workspace}} -name "${{ env.LILYPOND_FILES }}" -printf "%P\n" | xargs)"
-#    - name: LILYPOND files considered echo output
-#      run: |
-#        echo ${{ steps.getfile.outputs.files }}
-#    - name: Setup LilyPond
-#      run: |
-#        lilypond -fpdf ${{ steps.getfile.outputs.files }}
+      run: |
+        sbt test
+        sbt run
+    - name: Get changed files
+      id: getfile
+      run: |
+        echo "::set-output name=files::$(find ${{github.workspace}} -name "${{ env.LILYPOND_FILES }}" -printf "%P\n" | xargs)"
+    - name: LILYPOND files considered echo output
+      run: |
+        echo ${{ steps.getfile.outputs.files }}
+    - name: Setup LilyPond
+      run: |
+        lilypond -fpdf ${{ steps.getfile.outputs.files }}
     - name: Configure Git
       run: |
         mv *.midi output/midi

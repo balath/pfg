@@ -29,11 +29,7 @@ object Parser extends IOApp:
     (majorChorales, minorChorales): (Vector[Choral], Vector[Choral]) = chorales.partition(_.mode.equals(Mode.maj))
     majorModel <- processModel(majorChorales)
     minorModel <- processModel(minorChorales)
-    sample = minorModel.generateChoral(r, Note.c)
     _ <- IO.println(s"${chorales.length} chorales parsed successfully")
-//      >> IO.println(sample.semiphrases.map(s => s.map(_.bass)).map(generateBassLine).mkString("\n"))
-      >> writeTextToFile(s"$outputPath/pdf-major${r.nextInt()}.ly", sample.toLilypondFileFormat(false))
-      >> writeTextToFile(s"$outputPath/midi-major${r.nextInt()}.ly", sample.toLilypondFileFormat(true))
         >> writeModelToFile("models/major.model",majorModel)
         >> writeModelToFile("models/minor.model",minorModel)
   } yield ExitCode.Success

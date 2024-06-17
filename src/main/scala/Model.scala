@@ -107,7 +107,9 @@ case class Model(initialSemiphrase: SemiphraseModel,
     println(s"Final semiphrase generated: $last")
 
     val choral = initial +: middleSection :+ last
-    GeneratedChoral(choral map (_ map (key chord _)))
+    GeneratedChoral(choral map (_ map (
+      key chord _
+      )))
 
   def genFirstChord(model: SemiphraseModel, previousSemiphraseEnding: Option[ChordFigure])(r: Random): ChordFigure =
     previousSemiphraseEnding match
@@ -155,7 +157,7 @@ case class Model(initialSemiphrase: SemiphraseModel,
             val endNow = endSemiphrase(model, acc.size + 1, model.endingChords.getOrElse(nextChord, 0.0), nextChord)(r)
             genChordFigures((previousChords._2, nextChord), acc :+ nextChord, endNow)
 
-    println(s"Semiphrase model lengths: min=${model.minLength}, max=${model.maxLength}")
+//    println(s"Semiphrase model lengths: min=${model.minLength}, max=${model.maxLength}")
     val cf1 = genFirstChord(model, previousSemiphraseEnding)(r)
     val cf2 = genSecondChord(model, cf1)(r)
     genChordFigures((cf1, cf2), Vector(cf1, cf2), false)
