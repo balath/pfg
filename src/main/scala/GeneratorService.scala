@@ -4,14 +4,16 @@ import dsl.Note
 import model.Model
 import cats.effect.{ExitCode, IO, IOApp, Resource}
 import com.comcast.ip4s.{Port, ipv4, port}
-import org.http4s.{HttpApp, HttpRoutes, StaticFile, Status}
+import org.http4s.{HttpApp, HttpRoutes, StaticFile, Status, Uri}
 import org.http4s.dsl.io.*
 import org.http4s.implicits.*
 import org.http4s.ember.server.*
 import fs2.io.file.Path
 import org.http4s.circe.CirceEntityCodec.*
 import io.circe.generic.auto.*
-
+import org.http4s.headers.Origin
+import org.http4s.server.middleware.{CORS, CORSConfig}
+import concurrent.duration.DurationInt
 import scala.util.{Failure, Random, Success, Try}
 import scala.sys.process.{ProcessLogger, stringToProcess}
 import java.io.{FileInputStream, FileWriter, ObjectInputStream}
@@ -23,7 +25,16 @@ object GeneratorService extends IOApp {
   val outputPath = "output/"
   val r = new Random
 
-  def choralGenerator(minorModel: Model, majorModel: Model): HttpApp[IO] =
+  val corsService: (Model, Model) => HttpApp[IO] = (minorModel: Model, majorModel: Model) => CORS.policy
+    .withAllowOriginHost(Set(
+      Origin.Host(Uri.Scheme.https, Uri.RegName("balath.github.io"), None),
+      Origin.Host(Uri.Scheme.https, Uri.RegName("balath.github.io"), None)
+    ))
+    .withAllowCredentials(false)
+    .withMaxAge(1.day)
+    .apply(choralGenerator(minorModel, majorModel))
+
+  val choralGenerator: (Model, Model) => HttpApp[IO] = (minorModel: Model, majorModel: Model) =>
     HttpRoutes.of[IO] {
       case request@GET -> Root / "choral" / inputKey / inputMode =>
         val key = Try(Note.valueOf(inputKey.trim)).getOrElse(Note.c)
@@ -81,7 +92,7 @@ object GeneratorService extends IOApp {
       .default[IO]
       .withHost(ipv4"0.0.0.0")
       .withPort(port)
-      .withHttpApp(choralGenerator(minorModel, majorModel))
+      .withHttpApp(corsService(minorModel, majorModel))
       .build
       .use(_ => IO.never)
       .as(ExitCode.Success)

@@ -17,7 +17,8 @@ libraryDependencies ++= Seq(
   "org.http4s" %% "http4s-ember-server" % http4sVersion,
   "org.http4s" %% "http4s-dsl" % http4sVersion,
   "org.http4s" %% "http4s-circe" % http4sVersion,
-  "io.circe" %% "circe-generic" % "0.14.7"
+  "io.circe" %% "circe-generic" % "0.14.7",
+  "org.http4s" %% "http4s-server" % http4sVersion
 )
 enablePlugins(JavaAppPackaging)
 
