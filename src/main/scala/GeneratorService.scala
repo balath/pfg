@@ -58,7 +58,6 @@ object GeneratorService extends IOApp {
         }
         if cleanUp.isSuccess then Ok()
         else InternalServerError("Deletion not completed")
-        
     }.orNotFound
 
   def readModelFromFile(path: String): IO[Model] =
