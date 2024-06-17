@@ -60,12 +60,10 @@ object GeneratorService extends IOApp {
       .fromAutoCloseable(IO(new ObjectInputStream(new FileInputStream(path))))
       .use(input => IO(input.readObject().asInstanceOf[Model]))
 
-  def writeTextToFile(path: String, choral: String): IO[Unit] =
-    Resource
-      .make {
-        IO(new FileWriter(path))
-      } { writer => IO(writer.close()).handleErrorWith(_ => IO.unit) }
-      .use { writer => IO(writer.write(choral)) }
+  def writeTextToFile(path: String, choral: String): Unit =
+    val writer = new FileWriter(path)
+    writer.write(choral)
+    writer.close()
 
 
   def run(args: List[String]): IO[ExitCode] = for {
