@@ -37,7 +37,7 @@ object GeneratorService extends IOApp {
           writeTextToFile(lilypondToPdfPath, harmonizeChoral(choral).toLilypondFileFormat(false))
           writeTextToFile(lilypondToMidiPath, harmonizeChoral(choral).toLilypondFileFormat(true))
         }
-        val logger = ProcessLogger(println(_),println(_))
+        val logger = ProcessLogger(IO.println(_),IO.println(_))
         val lilypondProcessed = Try {
           s"lilypond -fpdf $lilypondToPdfPath $lilypondToMidiPath" ! logger
         }
