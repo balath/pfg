@@ -21,7 +21,6 @@ object GeneratorService extends IOApp {
   val modelsPath = "models/"
   val outputPath = "output/"
   val r = new Random
-
   def choralGenerator(minorModel: Model, majorModel: Model): HttpApp[IO] =
     HttpRoutes.of[IO] {
       case request@GET -> Root / "choral" / inputKey / inputMode =>
@@ -57,15 +56,17 @@ object GeneratorService extends IOApp {
     writer.close()
 
 
-  def run(args: List[String]): IO[ExitCode] =
-    val minorModel = readModelFromFile(s"${modelsPath}minor.model")
-    val majorModel = readModelFromFile(s"${modelsPath}major.model")
-    EmberServerBuilder
-      .default[IO]
-      .withHost(ipv4"0.0.0.0")
-      .withPort(port"8080")
-      .withHttpApp(choralGenerator(minorModel, majorModel))
-      .build
-      .use(_ => IO.never)
-      .as(ExitCode.Success)
+  def run(args: List[String]): IO[ExitCode] = for {
+    _ <- Parser.program
+    minorModel = readModelFromFile(s"${modelsPath}minor.model")
+    majorModel = readModelFromFile(s"${modelsPath}major.model")
+    exit <- EmberServerBuilder
+    .default[IO]
+    .withHost(ipv4"0.0.0.0")
+    .withPort(port"8080")
+    .withHttpApp(choralGenerator(minorModel, majorModel))
+    .build
+    .use(_ => IO.never)
+    .as(ExitCode.Success)
+  } yield exit
 }

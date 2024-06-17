@@ -8,7 +8,7 @@ import common.DataRegex.*
 import dsl.*
 import model.*
 
-import java.io.{File, FileOutputStream, FileWriter, ObjectOutputStream}
+import java.io.{ByteArrayOutputStream, File, FileOutputStream, FileWriter, ObjectOutputStream}
 
 object Parser extends IOApp:
 
@@ -22,7 +22,7 @@ object Parser extends IOApp:
       cfPairs.groupMapReduce((cf1, _) => cf1)((_, cf2) => Vector(cf2))(_ ++ _).toVector
 
   override def run(args: List[String]): IO[ExitCode] = program
-
+  
   val program = for {
     lines <- readFromRawData(dataPath)
     chorales <- extractChorales(lines)

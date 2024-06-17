@@ -20,4 +20,4 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic" % "0.14.7"
 )
 enablePlugins(JavaAppPackaging)
-Compile / run / mainClass := Some("generator.Generator")
+Compile / run / mainClass := Some("generator.GeneratorService")
