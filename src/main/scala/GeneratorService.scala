@@ -37,18 +37,14 @@ object GeneratorService extends IOApp {
           writeTextToFile(lilypondToPdfPath, harmonizeChoral(choral).toLilypondFileFormat(false))
           writeTextToFile(lilypondToMidiPath, harmonizeChoral(choral).toLilypondFileFormat(true))
         }
-        val stderr = new StringBuilder
-        val logger = ProcessLogger(
-          (output: String) => _,
-          (error: String) => stderr.append(error + "\n") // Captura la salida de error
-        )
+        val logger = ProcessLogger(println(_),println(_))
         val lilypondProcessed = Try {
           s"lilypond -fpdf $lilypondToPdfPath $lilypondToMidiPath" ! logger
         }
         (generation, lilypondProcessed) match {
           case (Success(_), Success(_)) =>  Ok (FileUrls (pdf = pdfId, midi = midId))
-          case (Success(_), Failure(_)) => InternalServerError (s"Failed at processing generated choral with Lilypond:\n${stderr.toString()}")
-          case (Failure(e), _) => InternalServerError (s"Failed at generating choral:\n${e.getMessage}")
+          case (Success(_), Failure(_)) => InternalServerError (s"Failed at processing generated choral with Lilypond")
+          case (Failure(e), _) => InternalServerError (s"Failed at generating choral: ${e.getMessage}")
         }
 
       case request@GET -> Root / "midi" / fileId =>
