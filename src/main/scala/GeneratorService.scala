@@ -13,7 +13,7 @@ import org.http4s.circe.CirceEntityCodec.*
 import io.circe.generic.auto.*
 
 import scala.util.{Failure, Random, Success, Try}
-import scala.sys.process.stringToProcess
+import scala.sys.process.{ProcessLogger, stringToProcess}
 import java.io.{FileInputStream, FileWriter, ObjectInputStream}
 
 object GeneratorService extends IOApp {
@@ -37,13 +37,18 @@ object GeneratorService extends IOApp {
           writeTextToFile(lilypondToPdfPath, harmonizeChoral(choral).toLilypondFileFormat(false))
           writeTextToFile(lilypondToMidiPath, harmonizeChoral(choral).toLilypondFileFormat(true))
         }
+        val stderr = new StringBuilder
+        val logger = ProcessLogger(
+          (output: String) => _,
+          (error: String) => stderr.append(error + "\n") // Captura la salida de error
+        )
         val lilypondProcessed = Try {
-          s"lilypond -fpdf $lilypondToPdfPath $lilypondToMidiPath".!!
+          s"lilypond -fpdf $lilypondToPdfPath $lilypondToMidiPath" ! logger
         }
         (generation, lilypondProcessed) match {
           case (Success(_), Success(_)) =>  Ok (FileUrls (pdf = pdfId, midi = midId))
-          case (Success(_), Failure(_)) => InternalServerError ("Failed at processing generated choral with Lilypond")
-          case (Failure(_), _) => InternalServerError ("Failed at generating choral")
+          case (Success(_), Failure(_)) => InternalServerError (s"Failed at processing generated choral with Lilypond:\n${stderr.toString()}")
+          case (Failure(e), _) => InternalServerError (s"Failed at generating choral:\n${e.getMessage}")
         }
 
       case request@GET -> Root / "midi" / fileId =>
