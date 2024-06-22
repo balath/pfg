@@ -1,6 +1,6 @@
 package generator
 
-import dsl.Note
+import dsl.{Note, Mode}
 import model.Model
 import cats.effect.{ExitCode, IO, IOApp, Resource}
 import com.comcast.ip4s.{Port, ipv4, port}
@@ -23,43 +23,46 @@ object GeneratorService extends IOApp {
   case class FileUrls(pdf: String, midi: String)
   val modelsPath = "models/"
   val outputPath = "output/"
+  val initialAttempts = 3
   val r = new Random
 
-  val corsService: (Model, Model) => HttpApp[IO] = (minorModel: Model, majorModel: Model) => CORS.policy
-    .withAllowOriginHost(Set(
-      Origin.Host(Uri.Scheme.https, Uri.RegName("balath.github.io"), None),
-      Origin.Host(Uri.Scheme.https, Uri.RegName("balath.github.io"), None)
-    ))
-    .withAllowCredentials(false)
-    .withMaxAge(1.day)
-    .apply(choralGenerator(minorModel, majorModel))
+  def corsService(minorModel: Model, majorModel: Model, attempts: Int): HttpApp[IO] =
+    CORS.policy
+      .withAllowOriginHost(Set(
+        Origin.Host(Uri.Scheme.https, Uri.RegName("balath.github.io"), None),
+        Origin.Host(Uri.Scheme.https, Uri.RegName("balath.github.io"), None)
+      ))
+      .withAllowCredentials(true)
+      .withMaxAge(1.day)
+      .apply(choralGenerator(minorModel, majorModel, attempts))
 
-  val choralGenerator: (Model, Model) => HttpApp[IO] = (minorModel: Model, majorModel: Model) =>
+  def choralGenerator(minorModel: Model, majorModel: Model, attempts: Int): HttpApp[IO] =
     HttpRoutes.of[IO] {
       case request@GET -> Root / "choral" / inputKey / inputMode =>
         val key = Try(Note.valueOf(inputKey.trim)).getOrElse(Note.c)
-        val model = if inputMode.trim.equals("major") then majorModel else minorModel
+        val mode: Mode = if inputMode.trim.equals("major") then Mode.maj else Mode.min
+        val model = if mode equals Mode.maj then majorModel else minorModel
         val pdfId = r.nextInt.toString
         val midId = r.nextInt.toString
         val lilypondToPdfPath = s"${outputPath}choral$pdfId.ly"
         val lilypondToMidiPath = s"${outputPath}choral$midId.ly"
         val generation = Try {
-          val choral = model.generateChoral(r, key)
+          val choral = model.generateChoral(r, key, mode)
           writeTextToFile(lilypondToPdfPath, harmonizeChoral(choral).toLilypondFileFormat(false))
           writeTextToFile(lilypondToMidiPath, harmonizeChoral(choral).toLilypondFileFormat(true))
         }
-        val logger = ProcessLogger(IO.println(_),IO.println(_))
         val lilypondProcessed = Try {
-          s"lilypond -fpdf $lilypondToPdfPath $lilypondToMidiPath" ! logger
+          s"lilypond -fpdf $lilypondToPdfPath $lilypondToMidiPath".!!
         }
         (generation, lilypondProcessed) match {
           case (Success(_), Success(_)) =>  Ok (FileUrls (pdf = pdfId, midi = midId))
-          case (Success(_), Failure(_)) => InternalServerError (s"Failed at processing generated choral with Lilypond")
-          case (Failure(e), _) => InternalServerError (s"Failed at generating choral: ${e.getMessage}")
+          case _ =>
+            if attempts > 0 then choralGenerator(minorModel, majorModel, attempts - 1)(request)
+            else InternalServerError("Unable to generated choral")
         }
 
       case request@GET -> Root / "midi" / fileId =>
-        StaticFile.fromPath(Path(s"choral$fileId.mid"), Some(request)).getOrElseF(NotFound())
+        StaticFile.fromPath(Path(s"choral$fileId.midi"), Some(request)).getOrElseF(NotFound())
 
       case request@GET -> Root / "pdf" / fileId =>
         StaticFile.fromPath(Path(s"choral$fileId.pdf"), Some(request)).getOrElseF(NotFound())
@@ -85,14 +88,14 @@ object GeneratorService extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = for {
     _ <- Parser.program
-    port <- IO(Port.fromString(sys.env.getOrElse("PORT", "8080")).get)
+    port <- IO(Port.fromString(sys.env.getOrElse("PORT", throw new NoSuchElementException("Port env variable not found"))).get)
     minorModel <- readModelFromFile(s"${modelsPath}minor.model")
     majorModel <- readModelFromFile(s"${modelsPath}major.model")
     exit <- EmberServerBuilder
       .default[IO]
       .withHost(ipv4"0.0.0.0")
       .withPort(port)
-      .withHttpApp(corsService(minorModel, majorModel))
+      .withHttpApp(corsService(minorModel, majorModel, initialAttempts))
       .build
       .use(_ => IO.never)
       .as(ExitCode.Success)

@@ -1,9 +1,10 @@
 import munit.FunSuite
 import dsl.*
-import dsl.Note.*
+import dsl.Note.{b, *}
 import dsl.ChordFigure.*
 import dsl.Interval.*
-import VoiceRange._
+import VoiceRange.*
+
 import scala.language.postfixOps
 
 class DSLTest extends FunSuite {
@@ -36,6 +37,7 @@ class DSLTest extends FunSuite {
   val c3 = NoteWithOctave(c, Octave._3)
   val f3 = NoteWithOctave(f, Octave._3)
   val g3 = NoteWithOctave(g, Octave._3)
+  val b3 = NoteWithOctave(b, Octave._3)
   val c4 = NoteWithOctave(c, Octave._4)
   val g4 = NoteWithOctave(g, Octave._4)
   val c5 = NoteWithOctave(c, Octave._5)
@@ -43,7 +45,7 @@ class DSLTest extends FunSuite {
   val d4 = NoteWithOctave(d, Octave._4)
   val d5 = NoteWithOctave(d, Octave._5)
   val fis4 = NoteWithOctave(fis, Octave._4)
-  val fes5 = NoteWithOctave(fes, Octave._5)
+  val fes2 = NoteWithOctave(fes, Octave._2)
   val a4 = NoteWithOctave(a, Octave._4)
 
   test("Perfect and majors intervals on major modes tonics should result on major mode notes"):
@@ -59,28 +61,29 @@ class DSLTest extends FunSuite {
     val obtained = minorModesNotes.map(mode => (minorModeIntervals.map(mode.head.interval(_)), mode))
     assert(obtained.forall((results, mode) => results.forall(mode.contains(_))), obtained.toString)
   test("Intervals over c and over g are properly obtained"):
-    val cExpected: Vector[Note] = Vector(c, des, d, dis, ees, e, fes, f, fis, ges, g, gis, aes, a, beses, bes, b, c)
-    val gExpected: Vector[Note] = Vector(g, aes, a, ais, bes, b, ces, c, cis, des, d, dis, ees, e, fes, f, fis, g)
-    val intervals = Interval.values toVector
+    val cExpected: Vector[Note] = Vector(c, cis, deses, des, d, dis, eeses, ees, e, eis, fes, f, fis, ges, g, gis, aeses, aes, a, ais, beses, bes, b, bis, ces, c)
+    val gExpected: Vector[Note] = Vector(g, gis, aeses, aes, a, ais, beses, bes, b, bis, ces, c, cis, des, d, dis, eeses, ees, e, eis, fes, f, fis, fisis, ges, g)
+    val intervals: Vector[Interval] = Interval.values.toVector
     val cObtained: Vector[Note] = intervals map (c interval)
     val gObtained: Vector[Note] = intervals map (g interval)
-
+    println(intervals.mkString(" - "))
     cObtained zip cExpected foreach :
       t => assertEquals(t._1, t._2)
     gObtained zip gExpected foreach :
       t => assertEquals(t._1, t._2)
   test("Chords are created properly"):
-    val chords = Vector(iv_v, viidis43_v, v6, v, iisemdis65_v, V65_v, iisemdis6_v, V7_v, V)
+    val chords = Vector(iv_v, viidis43_v, v6, v, iisemdis65_v, V65_v, iisemdis6_v, V7_v, V, bVII)
     val expectedChords = Vector(
-      Chord(iv_v, c, c, ees, g, None, Vector(c, ees, g)),
-      Chord(viidis43_v, c, fis, a, c, Some(ees), Vector(fis, a, c, ees)),
-      Chord(v6, bes, g, bes, d, None, Vector(g, bes, d)),
-      Chord(v, g, g, bes, d, None, Vector(g, bes, d)),
-      Chord(iisemdis65_v, c, a, c, ees, Some(g), Vector(a, c, ees, g)),
-      Chord(V65_v, fis, d, fis, a, Some(c), Vector(d, fis, a, c)),
-      Chord(iisemdis6_v, c, a, c, ees, Some(g), Vector(a, c, ees, g)),
-      Chord(V7_v, d, d, fis, a, Some(c), Vector(d, fis, a, c)),
-      Chord(V, g, g, b, d, None, Vector(g, b, d))
+      Chord(iv_v, c, c, ees, g, None, Vector(c, ees, g),fis, Grade.iv,false),
+      Chord(viidis43_v, c, fis, a, c, Some(ees), Vector(fis, a, c, ees), fis, Grade.vii, true),
+      Chord(v6, bes, g, bes, d, None, Vector(g, bes, d), b, Grade.v, false),
+      Chord(v, g, g, bes, d, None, Vector(g, bes, d), b, Grade.v, false),
+      Chord(iisemdis65_v, c, a, c, ees, Some(g), Vector(a, c, ees, g), fis, Grade.ii, true),
+      Chord(V65_v, fis, d, fis, a, Some(c), Vector(d, fis, a, c), fis, Grade.V, false),
+      Chord(iisemdis6_v, c, a, c, ees, Some(g), Vector(a, c, ees, g), fis, Grade.ii, true),
+      Chord(V7_v, d, d, fis, a, Some(c), Vector(d, fis, a, c), fis, Grade.V, false),
+      Chord(V, g, g, b, d, None, Vector(g, b, d), b, Grade.V, false),
+      Chord(bVII, bes, bes, d, f, None, Vector(bes, d, f), d, Grade.bVII, false)
     )
     chords map (c chord) zip expectedChords foreach :
       (obtained, expected) =>
@@ -102,6 +105,10 @@ class DSLTest extends FunSuite {
       tuple =>
         assertEquals(tuple._1, 12)
         assertEquals(tuple._2, 9)
+  test("Disminished an augmented intervals are detected when present"):
+    println(Interval.values.map(i => s"$i => ${i.isDisminishedOrAugmented}").mkString("\n"))
+    true
+
   test("Notes of a chord are properly orderer by nearness to a pitch"):
     val pitch = NoteWithOctave(a, Octave._4).absolutPitch
     val notes = c.chord(V7_v).notes
@@ -128,21 +135,20 @@ class DSLTest extends FunSuite {
     assertEquals(g getInterval fis, maj7)
     assertEquals(g getInterval f, min7)
     assertEquals(g getInterval fes, dis7)
-  test("Harmonic intervals are identified correctly from two notes with octave"):
-    assertEquals(c3 getInterval g4, perf5)
-    assertEquals(e2 getInterval c5, min6)
-    assertEquals(c4 getInterval c4, unis)
-    assertEquals(c4 getInterval c5, perf8)
-    assertEquals(g3 getInterval fis4, maj7)
-    assertEquals(g3 getInterval f3, min7)
-    assertEquals(g3 getInterval fes5, dis7)
+
+  test("Melodic intervals are identified correctly from two notes with octave"):
+    assertEquals(c3 getMelodicInterval e2, min6)
+    assertEquals(e2 getMelodicInterval c5, min6)
+    assertEquals(c4 getMelodicInterval c4, unis)
+    assertEquals(c4 getMelodicInterval c5, perf8)
+    assertEquals(g3 getMelodicInterval fis4, maj7)
+    assertEquals(g3 getMelodicInterval f3, maj2)
+    assertEquals(g3 getMelodicInterval fes2, aug2)
 
   test("notes in a chord are proprely ordered by nearness"):
     val chord = c.chord(ChordFigure.V65)
-    val orderedNotes = chord.notes.orderByNearness(NoteWithOctave(aes,Octave._3).absolutPitch,tenor)
-    println(orderedNotes)
-    assertEquals(0,0)
-
-//  test("Counter movement is detected")
+    val obtained = chord.notes.orderByNearness(NoteWithOctave(aes,Octave._3).absolutPitch,tenor)
+    val expected = Vector(g3, b3, f3, d4)
+    assertEquals(obtained, expected)
 
 }

@@ -4,6 +4,8 @@ import cats.kernel.Previous
 import dsl.{Choral, Chord, ChordFigure, GeneratedChoral, Mode, Note}
 import scala.util.{Failure, Random, Success, Try}
 
+val LOG_ENABLED = true
+
 type SelectionTuple = (Double, ChordFigure)
 type SelectionWheel = Vector[SelectionTuple]
 type FirstOrderTransitions = Map[ChordFigure, SelectionWheel]
@@ -90,24 +92,26 @@ case class Model(initialSemiphrase: SemiphraseModel,
                  //                  middles: TransitionMatrix,
                  //                  last: TransitionMatrix
                 ) extends Serializable:
-  def generateChoral(r: Random, key: Note): GeneratedChoral =
+  def generateChoral(r: Random, key: Note, mode: Mode): GeneratedChoral =
     def generateMiddleSection(length: Int, acc: Vector[Vector[ChordFigure]], lastChord: ChordFigure): Vector[Vector[ChordFigure]] =
       if length == 0 then acc
       else
         val currentSemiphrase = generateSemiphrases(middleSemiphrases, Some(lastChord))(r)
-        println(s"Semiphrase ${acc.length + 1} generated: $currentSemiphrase")
+        if LOG_ENABLED then
+          println(s"Semiphrase ${acc.length + 1} generated: $currentSemiphrase")
         generateMiddleSection(length - 1, acc :+ currentSemiphrase, currentSemiphrase.last)
 
     val initial = generateSemiphrases(initialSemiphrase, None)(r)
-    println(s"Initial semiphrase generated: $initial")
-    //TODO: Create data structure for middle section length distribution
+    if LOG_ENABLED then
+      println(s"Initial semiphrase generated: $initial")
     val middleSectionLength = r.nextGaussianBetween(middleSectionBounds._1, middleSectionBounds._2)
     val middleSection = generateMiddleSection(middleSectionLength, Vector.empty, initial.last)
     val last = generateSemiphrases(lastSemiphrase, Some(middleSection.last.last))(r)
-    println(s"Final semiphrase generated: $last")
+    if LOG_ENABLED then
+      println(s"Final semiphrase generated: $last")
 
     val choral = initial +: middleSection :+ last
-    GeneratedChoral(choral map (_ map (
+    GeneratedChoral(key, mode, choral map (_ map (
       key chord _
       )))
 
@@ -129,17 +133,19 @@ case class Model(initialSemiphrase: SemiphraseModel,
 
   def endSemiphrase(semiphraseModel: SemiphraseModel, currentLength: Int, currentChordEndingProbability: Double, cf: ChordFigure)(r: Random): Boolean =
     if currentChordEndingProbability == 1.0 then
-      println(s"ENDING at ($currentLength) by ONLY ENDING CHORD with $cf")
+      if LOG_ENABLED then
+        println(s"ENDING at ($currentLength) by ONLY ENDING CHORD with $cf")
       return true
     if currentLength >= semiphraseModel.maxLength && currentChordEndingProbability > 0.0 then
-      println(s"ENDING at ($currentLength) by LENGTH OUT OF BOUNDS with $cf")
+      if LOG_ENABLED then
+        println(s"ENDING at ($currentLength) by LENGTH OUT OF BOUNDS with $cf")
       return true
     val currentLengthBias = currentLength / semiphraseModel.averageLength
     val endingBias = currentLengthBias * currentChordEndingProbability
-    //TODO: Create data structure for semiphrases length distribution
     val random = r.nextGaussianBetween(0.0, 1.0)
     if random < endingBias then
-      println(s"ENDING at ($currentLength) by STOCHASTIC ENDING with $cf, chordProb=$currentChordEndingProbability, lengthProb=$currentLengthBias, bias=$endingBias, r=$random")
+      if LOG_ENABLED then
+        println(s"ENDING at ($currentLength) by STOCHASTIC ENDING with $cf, chordProb=$currentChordEndingProbability, lengthProb=$currentLengthBias, bias=$endingBias, r=$random")
       return true
     false
 
@@ -150,13 +156,15 @@ case class Model(initialSemiphrase: SemiphraseModel,
         val nextChordDistribution = Try(model.transitions(previousChords._1)(previousChords._2))
         nextChordDistribution match
           case Failure(e) =>
-            println(s"ENDING at (${acc.length}) by 2ND ORDER TRANSITION NOT FOUND with ${acc.last}")
+            if LOG_ENABLED then
+              println(s"ENDING at (${acc.length}) by 2ND ORDER TRANSITION NOT FOUND with ${acc.last}")
             acc
           case Success(nCD) =>
             val nextChord = nCD.find((prob, chord) => r.nextDouble() <= prob).getOrElse(nCD.last)._2
             val endNow = endSemiphrase(model, acc.size + 1, model.endingChords.getOrElse(nextChord, 0.0), nextChord)(r)
             genChordFigures((previousChords._2, nextChord), acc :+ nextChord, endNow)
 
+//    if logPrinting then
 //    println(s"Semiphrase model lengths: min=${model.minLength}, max=${model.maxLength}")
     val cf1 = genFirstChord(model, previousSemiphraseEnding)(r)
     val cf2 = genSecondChord(model, cf1)(r)

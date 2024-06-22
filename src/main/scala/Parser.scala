@@ -69,9 +69,7 @@ object Parser extends IOApp:
         val enumChord = Try(ChordFigure.valueOf(c))
         enumChord match
           case Success(value) => value
-          case Failure(exception) =>
-            println(exception.getMessage)
-            ChordFigure.Empty
+          case Failure(exception) => throw exception //println(c);ChordFigure.Empty
       ).toVector).toVector
       val semiphrasesQuantity = semiphrases.length
       val choralNum = metadataArray(0).toInt

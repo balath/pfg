@@ -15,18 +15,21 @@ object LocalGenerator extends IOApp {
   val program: IO[ExitCode] = for {
       minorModel <- readModelFromFile(s"${modelsPath}minor.model")
       majorModel <- readModelFromFile(s"${modelsPath}major.model")
-      _ <- generationMenu(minorModel, majorModel).foreverM
+      _ <- generationMenu(minorModel, majorModel)//.foreverM
     } yield ExitCode.Success
 
   def generationMenu(minorModel: Model, majorModel: Model): IO[Unit] =
     for {
-      _ <- IO.print("Tono (c|d|e|f|g|a|b): ")
-      inputKey <- IO.readLine
-      _ <- IO.print("Modo (major|minor): ")
-      inputMode <- IO.readLine
-      key = Note.valueOf(inputKey.trim)
-      model = if inputMode.trim.equals("major") then majorModel else minorModel
-      choral = model.generateChoral(r, key)
+//      _ <- IO.print("Tono (c|d|e|f|g|a|b): ")
+//      inputKey <- IO.readLine
+//      _ <- IO.print("Modo (major|minor): ")
+//      inputMode <- IO.readLine
+//      key = Note.valueOf(inputKey.trim)
+//      _ <- IO.println(s"Key = $key")
+//      mode = if inputMode.trim.equals("major") then majorModel else minorModel
+      key <- IO(Note.aes)
+      mode <- IO(Mode.min)
+      choral <- IO(minorModel.generateChoral(r, key, mode))
       pdfPath <- IO(s"$outputPath/choral${r.nextInt()}.ly")
       midiPath <- IO(s"$outputPath/choral${r.nextInt()}.ly")
       _ <- writeTextToFile(pdfPath, harmonizeChoral(choral).toLilypondFileFormat(false))
