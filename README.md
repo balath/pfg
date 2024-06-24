@@ -1,5 +1,5 @@
-# <img src="bach.gif" alt="Bach" width="50" align="center"> Bach-machine: Generación de música coral mediante sistemas inteligentes
-
+# <img src="bach.gif" alt="Bach" width="50" align="center"> Bach-machine
+![action](https://github.com/balath/pfg/actions/workflows/scala.yml/badge.svg) ![Heroku Deploy](https://deploy-badge.vercel.app/heroku/bach-machine-02a43fd154c6?root=badge)
 ### ¿Por qué?
 Bach-machine es el Proyecto Fin de Grado presentado por @balath para el Grado en Ingeniería Informática de la 
 Escuela Técnica Superior de Ingeniría Informática de la UNED. La idea surge a raíz de la práctica del mismo nombre 
@@ -8,12 +8,12 @@ sencillo de programación lógica realizado con Prolog sobre un sistema de regla
 armónica de un coral.
 
 ### ¿Qué?
-Bach-machine es un generador de corales al estilo de Johann Sebastian Bach, que muestrea la compleja estructura armónica
+Bach-machine es un generador de corales en el estilo de Johann Sebastian Bach, que muestrea la estructura armónica
 de una pieza de estilo coral a partir en un modelo probabilista basado en cadenas de Markov, para después armonizar a 4
-voces esta estructura mediante un algoritmo de búsqueda. Este sistema se ha montado bajo un servidor http que sirve las
-piezas corales generadas a una petición sobre una tonalidad dada. 
+voces esta estructura mediante un algoritmo de búsqueda, sin añadir ornamentación. La aplicación se utiliza mediante un 
+servidor http que sirve las piezas corales generadas a raíz de una petición para una tonalidad dada. 
 
-El sistema se estructura en seis componentes:
+Su estructura básica se configura con seis componentes:
 
 + [Un conjunto de datos](data/rawData.txt): Anotación de los cifrados armónicos de una colección de corales de J.S. Bach.
 + [Analizador](src/main/scala/Parser.scala): Procesa el conjunto de datos y construye las distribuciones de probabilidad que conforman el modelo.
@@ -25,16 +25,20 @@ El sistema se estructura en seis componentes:
 ### ¿Cómo?
 Bach-machine puede usarse a través de la [web de la aplicación](balath.github.io) o puede desplegarse en local.
 
-Para el despliegue en local se necesita:
+Para el despliegue en local se necesita tener instalado:
 + [Scala](https://www.scala-lang.org/) y [sbt](www.scala-sbt.org) (en caso de que quieran hacerse modificaciones al código)
 + [Docker](https://www.docker.com/products/docker-desktop/)
 
-Una vez iniciado Docker:
+En el caso de realizar modificaciones no hay que olvidar actualizar el jar de la aplicación ejecutando en el directorio raíz:
+```bash
+sbt assembly
+```
+Para ejecutar la aplicación, una vez se haya iniciado Docker:
 ```bash
 docker image build -t bach-machine:latest .
 docker run bach-machine:latest
 ```
-Con el contenedor ejecutándose, podemos enviar peticiones por `curl`:
+Con el contenedor ejecutándose, podemos enviar peticiones al servidor usando:
 ```bash
 key="c"
 mode="minor"

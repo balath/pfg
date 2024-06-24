@@ -65,6 +65,8 @@ object GeneratorService extends IOApp {
 
       case request@GET -> Root / "pdf" / fileId =>
         StaticFile.fromPath(Path(s"choral$fileId.pdf"), Some(request)).getOrElseF(NotFound())
+
+      case request@GET -> Root / "badge" => Ok()
     }.orNotFound
 
   def readModelFromFile(path: String): IO[Model] =
