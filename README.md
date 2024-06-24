@@ -1,26 +1,47 @@
-# Generación de Música Coral mediante sistemas inteligentes
-### Objetivos
-Desarrollo de un sistema que genere corales armonizados a 4 voces, con una estructura armónica coherente con el estilo de composición de corales de Johann Sebastian Bach y siguiendo las reglas de armonización correspondientes.
+# bach-machine: Generación de Música Coral mediante sistemas inteligentes
 
-### Método de desarrollo, fases del trabajo y fechas de realización.
-El sistema tiene cuatro partes claramente diferenciadas:
-+ Creación de la base de conocimiento (BC): Anotación de estructuras armónicas extraídas de análisis armónicos de alrededor de 400 corales de J.S. Bach.
-+ Generación de armonías (GA): Diseño y desarrollo del módulo que genera una nueva estructura armónica, en forma de un bajo cifrado, a partir de la BC y una entrada de parámetros.
-+ Armonización: Diseño y desarrollo del algoritmo que implementa las normas de armonización a 4 voces partiendo del cifrado obtenido por la GA.
-+ Interfaz: Obtención del resultado en formato musical.
+### ¿Por qué?
+bach-machine es el Proyecto Fin de Grado presentado por @balath para el Grado en Ingeniería Informática de la 
+Escuela Técnica Superior de Ingeniría Informática de la UNED. La idea surge a raíz de la práctica del mismo nombre 
+realizada para la asignatura del de Fundamentos de la IA, dentro del mismo Grado, que consistió en un ejercicio muy
+sencillo de programación lógica realizado con Prolog sobre un sistema de reglas para la generación de una estructura 
+armónica de un coral.
 
-Tras una fase preliminar de investigación sobre el estado del arte, se analizarán y decidirán las aproximaciones y herramientas a utilizar en el diseño de cada parte del proyecto, tras lo que se iniciará la fase de diseño e implementación. Se utilizarán metodologías ágiles en el
-desarrollo del proyecto, aplicando un flujo iterativo e incremental sobre las cuatro partes a desarrollar, e integrando las pruebas en este flujo:
-+ [BC](data/rawData.txt): Secciones de, aproximadamente, 50 corales anotados por iteración.
-+ [GA](src/main/scala/Model.scala): Producto inicial sobre el que se irán añadiendo y ajustando parámetros de forma cualitativa y cuantitativa.
-+ [Armonización](src/main/scala/DSL.scala): Algoritmo de búsqueda al que se irán añadiendo requisitos: tesitura de las voces, movimiento de las voces, resoluciones, movimientos prohibidos…
-+ Interfaz: Entrada de parámetros, obtención de la salida, aplicación de formatos estándares.
+### ¿Qué?
+bach-machine es un generador de corales al estilo de Johann Sebastian Bach, que muestrea la compleja estructura armónica
+de una pieza de estilo coral a partir en un modelo probabilista basado en cadenas de Markov, para después armonizar a 4
+voces esta estructura mediante un algoritmo de búsqueda. Este sistema se ha montado bajo un servidor http que sirve las
+piezas corales generadas a una petición sobre una tonalidad dada. 
 
-Se estima la realización del proyecto a lo largo de una serie de [8-10 iteraciones de dos semanas](https://github.com/users/balath/projects/4) a desarrollar entre los meses de febrero y junio, con el fin de realizar la defensa a lo largo del mes de julio, si bien a lo largo del primer cuatrimestre se realizará la investigación preliminar y los análisis y decisiones sobre el diseño del sistema.
+El sistema se estructura en seis componentes:
 
-### Medios a utilizar y breve justificación de la pertinencia de los mismos.
-Para la gestión del proyecto se utilizará el entorno ofrecido por Github, que ofrece herramientas de gestión, planificación, control de versiones, automatización de pruebas e integración y repositorios privados, en este caso de forma gratuita con la cuenta de estudiante.
++ [Un conjunto de datos](data/rawData.txt): Anotación de los cifrados armónicos de una colección de corales de J.S. Bach.
++ [Analizador](src/main/scala/Parser.scala): Procesa el conjunto de datos y construye las distribuciones de probabilidad que conforman el modelo.
++ [Modelo](src/main/scala/Model.scala): Descripción del modelo probabilista utilizado para muestrear corales en tonalidades mayores o menores.
++ [Generador](src/main/scala/Model.scala): Aplica un muestreo estocástico simple sobre el modelo para generar las piezas corales. 
++ [Armonizador](src/main/scala/Harmonizer.scala): Emplea un algoritmo de backtracking para buscar una armonización que cumpla con las reglas básicas de armonización de corales.
++ [Interfaz](balath.github.io): Página web mediante la que se utiliza el modelo
 
-Para la realización de la memoria se utilizará el sistema de creación de documentos LaTeX mediante el editor online [Overleaf](https://www.overleaf.com/project), que permite sincronización con el repositorio.
+### ¿Cómo?
+bach-machine puede usarse a través de la [web de la aplicación](balath.github.io) o puede desplegarse en local.
 
-El proyecto requiere un lenguaje de programación que facilite la descripción de un lenguaje específico del dominio relativo a la armonía musical, a efectos de expresar notas musicales, intervalos, tipos y familias de acordes, su composición y adaptación a distintas tonalidades, etc. Además, debe facilitar el uso posterior de esta información a la hora de aplicar las reglas de armonización a una sucesión de acordes, para lo que sería óptimo la capacidad de anidamiento de funciones y encaje de patrones o pattern matching. Por estas y otras razones, se desarrollará previsiblemente en lenguaje Scala, que encaja perfectamente con estos requisitos. Además, se utilizarán otros estándares de notación musical como MusicXML o [LilyPond](https://lilypond.org/index.es.html) para la salida.
+Para el despliegue en local se necesita:
++ [Scala](https://www.scala-lang.org/) y [sbt](www.scala-sbt.org) (en caso de que quieran hacerse modificaciones al código)
++ [Docker](https://www.docker.com/products/docker-desktop/)
+
+Una vez iniciado Docker:
+```bash
+docker image build -t bach-machine:latest .
+docker run bach-machine:latest
+```
+Con el contenedor ejecutándose, podemos enviar peticiones por `curl`:
+```bash
+key="c" #Notas en cifrado americano (c,d,e...) terminadas en is para sostenidos o es para bemoles (cis, des...)
+mode="minor" #[minor|major]
+response=$(curl -s "localhost:8080/choral/$key/$mode")
+pdfId=$(echo $response |  awk -F'"' '{print $4}')
+midiId=$(echo $response |  awk -F'"' '{print $8}')
+curl -o "choral.pdf" "localhost:8080/pdf/$pdfId"
+curl -o "choral.midi" "localhost:8080/midi/$midiId"  #En windows cambiar la extensión a .mid
+ls choral*
+```

@@ -1,6 +1,6 @@
 package common
 
-object DataRegex {
+object Values {
   val modelsPath = "models/"
   val outputPath = "output/"
   val dataPath = "data/rawData.txt"

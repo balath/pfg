@@ -13,9 +13,11 @@ val LOG_ENABLED = false
 
 
 def harmonizeChoral(choral: GeneratedChoral): HarmonizedChoral =
-  val harmonizedChoral = HarmonizedChoral(choral.semiphrases.map(harmonizeSemiphrase(_)), choral)
-  if LOG_ENABLED then
-    println("Choral successfully harmonized!!!")
+  val harmonizedChoral = HarmonizedChoral(choral.semiphrases.zipWithIndex.map{(s,i) =>
+    println(s"Harmonizing semiphrase ${i+1}")
+    harmonizeSemiphrase(s)
+  }, choral)
+  println("Choral successfully harmonized!!!")
   harmonizedChoral
 
 def harmonizeSemiphrase(semiphrase: GeneratedSemiphrase): HarmonizedSemiphrase =
@@ -93,7 +95,7 @@ def leadingNoteResolution(curr: HarmonizedChord, prev: HarmonizedChord, prevChor
   if prevChord.grade.isDominant then
     val pairedMovements = Vector(prev.tenor, prev.contra, prev.treble) lazyZip Vector(curr.tenor, curr.contra, curr.treble)
     val result = pairedMovements.exists((x, y) => x.note.equals(prevChord.leadingNote) && !x.note.interval(Interval.min2).equals(y.note))
-    if result then if LOG_ENABLED then
+    if result && LOG_ENABLED then
         println(s"${indent}ERROR: Leading note (${prevChord.leadingNote}) bad resolution between chords $prev and $curr")
     result
   else false
@@ -102,7 +104,7 @@ def aumentedOrDisminished(curr: HarmonizedChord, prev: HarmonizedChord, currChor
   else
     val pairedMovements = Vector(prev.tenor, prev.contra, prev.treble) lazyZip Vector(curr.tenor, curr.contra, curr.treble)
     val result = pairedMovements.exists((x, y) => x.getMelodicInterval(y).isDisminishedOrAugmented)
-    if result then if LOG_ENABLED then
+    if result && LOG_ENABLED then
         println(s"${indent}ERROR: Dis or Aug melodic interval between chords $prev and $curr")
     result
 def seventhResolution(curr: HarmonizedChord, prev: HarmonizedChord, prevChord: Chord, indent: String): Boolean =

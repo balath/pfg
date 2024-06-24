@@ -1,7 +1,7 @@
 package generator
 
 import cats.effect.{ExitCode, IO, IOApp, Resource}
-import common.DataRegex.{dataPath, modelsPath, outputPath}
+import common.Values.{dataPath, modelsPath, outputPath}
 import dsl.{Choral, Mode, Note}
 import model.Model
 import scala.sys.process._

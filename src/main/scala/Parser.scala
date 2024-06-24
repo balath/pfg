@@ -4,7 +4,7 @@ import cats.effect.{ExitCode, IO, IOApp, Resource}
 import cats.syntax.writer
 
 import scala.util.{Failure, Random, Success, Try, control}
-import common.DataRegex.*
+import common.Values.*
 import dsl.*
 import model.*
 
@@ -23,7 +23,7 @@ object Parser extends IOApp:
 
   override def run(args: List[String]): IO[ExitCode] = program
   
-  val program = for {
+  def program: IO[ExitCode] = for {
     lines <- readFromRawData(dataPath)
     chorales <- extractChorales(lines)
     (majorChorales, minorChorales): (Vector[Choral], Vector[Choral]) = chorales.partition(_.mode.equals(Mode.maj))

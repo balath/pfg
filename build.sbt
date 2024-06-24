@@ -26,4 +26,7 @@ assembly / mainClass := Some("generator.GeneratorService")
 
 assembly / assemblyJarName := "bach-machine.jar"
 
+assembly / target := baseDirectory.value
+
 Compile / run / mainClass := Some("generator.GeneratorService")
+

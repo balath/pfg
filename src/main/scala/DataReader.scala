@@ -3,7 +3,7 @@ import scala.io.Source.fromFile
 import dsl.{ChordFigure, Mode, Note}
 
 import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
-import common.DataRegex.*
+import common.Values.*
 
 import scala.util.{Failure, Success, Try}
 

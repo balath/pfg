@@ -48,17 +48,16 @@ object GeneratorService extends IOApp {
         val lilypondToMidiPath = s"${outputPath}choral$midId.ly"
         val generation = Try {
           val choral = model.generateChoral(r, key, mode)
-          writeTextToFile(lilypondToPdfPath, harmonizeChoral(choral).toLilypondFileFormat(false))
-          writeTextToFile(lilypondToMidiPath, harmonizeChoral(choral).toLilypondFileFormat(true))
-        }
-        val lilypondProcessed = Try {
+          val harmonizedChoral = harmonizeChoral(choral)
+          writeTextToFile(lilypondToPdfPath, harmonizedChoral.toLilypondFileFormat(false))
+          writeTextToFile(lilypondToMidiPath, harmonizedChoral.toLilypondFileFormat(true))
           s"lilypond -fpdf $lilypondToPdfPath $lilypondToMidiPath".!!
         }
-        (generation, lilypondProcessed) match {
-          case (Success(_), Success(_)) =>  Ok (FileUrls (pdf = pdfId, midi = midId))
-          case _ =>
+        generation match {
+          case Success(_) =>  Ok (FileUrls (pdf = pdfId, midi = midId))
+          case Failure(ex) =>
             if attempts > 0 then choralGenerator(minorModel, majorModel, attempts - 1)(request)
-            else InternalServerError("Unable to generated choral")
+            else InternalServerError(s"Unable to generated choral: $ex")
         }
 
       case request@GET -> Root / "midi" / fileId =>
@@ -66,13 +65,6 @@ object GeneratorService extends IOApp {
 
       case request@GET -> Root / "pdf" / fileId =>
         StaticFile.fromPath(Path(s"choral$fileId.pdf"), Some(request)).getOrElseF(NotFound())
-      case request@DELETE -> Root / fileId =>
-        val cleanUp = Try {
-          s"rm choral$fileId.* ".!!
-          s"rm ${outputPath}choral$fileId.ly".!!
-        }
-        if cleanUp.isSuccess then Ok()
-        else InternalServerError("Deletion not completed")
     }.orNotFound
 
   def readModelFromFile(path: String): IO[Model] =
@@ -84,7 +76,6 @@ object GeneratorService extends IOApp {
     val writer = new FileWriter(path)
     writer.write(choral)
     writer.close()
-
 
   def run(args: List[String]): IO[ExitCode] = for {
     _ <- Parser.program
@@ -100,8 +91,5 @@ object GeneratorService extends IOApp {
       .use(_ => IO.never)
       .as(ExitCode.Success)
   } yield exit
-
-
-
 }
 

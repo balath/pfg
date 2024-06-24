@@ -1,6 +1,6 @@
 package dsl
 
-import common.DataRegex.*
+import common.Values.*
 
 import scala.annotation.tailrec
 import scala.language.postfixOps
@@ -426,6 +426,10 @@ case object IntervalDirection:
     case n if n > 0 => IntervalDirection.asc
     case n if n < 0 => IntervalDirection.desc
 
+/**
+ * DSL for chords figures
+ */
+
 enum ChordFigure:
   case Empty extends ChordFigure
   case I extends ChordFigure
@@ -735,5 +739,6 @@ enum ChordFigure:
   case IV_bVII extends ChordFigure
   case iidis7 extends ChordFigure
   case ii6_bVI extends ChordFigure
+  case viidis_vi extends ChordFigure
 
 end ChordFigure
