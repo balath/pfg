@@ -1,6 +1,6 @@
-# <center><img src="bach.gif" alt="Bach" width="50" align="center"> Bach-machine 
+# <center><img src="bach.gif" alt="Bach" width="50" align="center"> Bach-machine </center>
 
-## Generación de Música Coral mediante sistemas inteligentes
+## Generación de música coral mediante sistemas inteligentes
 
 ### ¿Por qué?
 Bach-machine es el Proyecto Fin de Grado presentado por @balath para el Grado en Ingeniería Informática de la 
