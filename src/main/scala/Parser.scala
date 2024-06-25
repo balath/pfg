@@ -85,7 +85,7 @@ object Parser extends IOApp:
     val firstSemiphrasesModel = processSemiphrases(chorales.map(_.semiphrases.head))
     val middleSemiphrasesModel = processSemiphrases(chorales.flatMap(_.semiphrases.tail.dropRight(1)))
     val lastSemiphrasesModel = processSemiphrases(chorales.map(_.semiphrases.last))
-    val endingToInitialChordsTransitions: FirstOrderTransitions = chorales
+    val endingToInitialChordsTransitions: SimpleStateTransitions = chorales
       .flatMap(choral => choral.semiphrases.lazyZip(choral.semiphrases.tail).map((a, b) => (a.last, b.head)))
       .groupPairsByFirstElement
       .map(chordProgressionsToTransitions).toMap
@@ -104,12 +104,12 @@ object Parser extends IOApp:
     val cf1Ocurrences = semiphrases.map(_.head).zipWithOcurrences
     val cf1SelectionWheel: SelectionWheel = chordOcurrencesToSelectionWheel(cf1Ocurrences.toVector, semiphrases.length)
 
-    val cf2Transitions: FirstOrderTransitions = semiphrases
+    val cf2Transitions: SimpleStateTransitions = semiphrases
       .map(sp => (sp(0), sp(1)))
       .groupPairsByFirstElement
       .map(chordProgressionsToTransitions).toMap
 
-    val transitions: SecondOrderTransitions = semiphrases
+    val transitions: CompoundStateTransitions = semiphrases
       .flatMap(sp => sp.lazyZip(sp.tail).lazyZip(sp.tail.tail))
       .groupMapReduce((cf1, _, _) => cf1)((_, cf2, cf3) => Vector((cf2, cf3)))(_ ++ _).toVector
       .map((cf1, cfs) =>

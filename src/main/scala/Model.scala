@@ -8,8 +8,8 @@ val LOG_ENABLED = true
 
 type SelectionTuple = (Double, ChordFigure)
 type SelectionWheel = Vector[SelectionTuple]
-type FirstOrderTransitions = Map[ChordFigure, SelectionWheel]
-type SecondOrderTransitions = Map[ChordFigure, FirstOrderTransitions]
+type SimpleStateTransitions = Map[ChordFigure, SelectionWheel]
+type CompoundStateTransitions = Map[ChordFigure, SimpleStateTransitions]
 
 extension (sw: SelectionWheel)
   def toDataStructureCode: String =
@@ -18,7 +18,7 @@ extension (sw: SelectionWheel)
         case (d, c) => s"($d, $c)"
       }.mkString(",")
     })"
-extension (fot: FirstOrderTransitions)
+extension (fot: SimpleStateTransitions)
   def fotToDataStructureCode: String =
     s"""Map(${
       fot.map {
@@ -37,13 +37,13 @@ extension (cfd: Map[ChordFigure, Double])
         case (cf, d) => s"($cf -> $d)"
       }.mkString(",")
     })"
-  
+
 extension (sot: Map[ChordFigure, Map[ChordFigure, SelectionWheel]])
   def sotToDataStructureCode: String =
     s"""Map(${sot.map {
-      case (cf, fot) => s"$cf -> ${fot.fotToDataStructureCode}" 
+      case (cf, fot) => s"$cf -> ${fot.fotToDataStructureCode}"
     }.mkString(",")}
-    )""" 
+    )"""
 
 extension (r: Random)
   def nSigma: Int = 3
@@ -57,8 +57,8 @@ extension (r: Random)
     lowerBound.max(upperBound.min((r.nextGaussian() * std + mean).round.toInt))
 
 case class SemiphraseModel(cf1Distribution: SelectionWheel,
-                           cf2Transitions: FirstOrderTransitions,
-                           transitions: SecondOrderTransitions,
+                           cf2Transitions: SimpleStateTransitions,
+                           transitions: CompoundStateTransitions,
                            endingChords: Map[ChordFigure, Double],
                            averageLength: Double,
                            minLength: Int,
@@ -66,12 +66,12 @@ case class SemiphraseModel(cf1Distribution: SelectionWheel,
                           ):
   def toDataStructureCode: String =
     s"""SemiphraseModel(
-      ${cf1Distribution.toDataStructureCode}, 
-      ${cf2Transitions.fotToDataStructureCode}, 
-      ${transitions.sotToDataStructureCode}, 
-      ${endingChords.toDataStructureCode}, 
-      $averageLength, 
-      $minLength, 
+      ${cf1Distribution.toDataStructureCode},
+      ${cf2Transitions.fotToDataStructureCode},
+      ${transitions.sotToDataStructureCode},
+      ${endingChords.toDataStructureCode},
+      $averageLength,
+      $minLength,
       $maxLength
       )"""
 
@@ -87,7 +87,7 @@ case class SemiphraseModel(cf1Distribution: SelectionWheel,
 case class Model(initialSemiphrase: SemiphraseModel,
                  middleSemiphrases: SemiphraseModel,
                  lastSemiphrase: SemiphraseModel,
-                 endingToInitialChordsTransitions: FirstOrderTransitions,
+                 endingToInitialChordsTransitions: SimpleStateTransitions,
                  middleSectionBounds: (Int, Int)
                  //                  middles: TransitionMatrix,
                  //                  last: TransitionMatrix
