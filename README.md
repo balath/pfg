@@ -75,3 +75,7 @@ y los modos (`mode`):
 menor ⇒ minor
 Mayor ⇒ major
 ```
+
+##### Créditos
+
+La imagen de Bach pixelado utilizada en este proyecto ha sido creada por [_ClassicalPixel_](https://www.classicalpixel.co).
