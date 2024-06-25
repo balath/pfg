@@ -1,9 +1,9 @@
 # <img src="bach.gif" alt="Bach" width="50" align="center"> Bach-machine
 ![action](https://github.com/balath/pfg/actions/workflows/scala.yml/badge.svg) ![Heroku Deploy](https://deploy-badge.vercel.app/heroku/bach-machine-02a43fd154c6?root=badge)
 ### ¿Por qué?
-Bach-machine es el Proyecto Fin de Grado presentado por @balath para el Grado en Ingeniería Informática de la 
-Escuela Técnica Superior de Ingeniría Informática de la UNED. La idea surge a raíz de la práctica del mismo nombre 
-realizada para la asignatura del de Fundamentos de la IA, dentro del mismo Grado, que consistió en un ejercicio muy
+Bach-machine es mi Proyecto Fin de Grado presentado para el Grado en Ingeniería Informática de la 
+Escuela Técnica Superior de Ingeniría Informática de la UNED. La idea surge a raíz de una práctica 
+realizada para la asignatura de Fundamentos de la IA, dentro del mismo Grado, que consistió en un ejercicio muy
 sencillo de programación lógica realizado con Prolog sobre un sistema de reglas para la generación de una estructura 
 armónica de un coral.
 
