@@ -23,7 +23,7 @@ Su estructura básica se configura con seis componentes:
 + [Interfaz](balath.github.io): Página web mediante la que se utiliza el modelo
 
 ### ¿Cómo?
-Bach-machine puede usarse a través de la [web de la aplicación](balath.github.io) o puede desplegarse en local.
+Bach-machine puede usarse a través de la [web de la aplicación](https://balath.github.io) o puede desplegarse en local.
 
 Para el despliegue en local se necesita tener instalado:
 + [Scala](https://www.scala-lang.org/) y [sbt](www.scala-sbt.org) (en caso de que quieran hacerse modificaciones al código)
