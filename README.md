@@ -36,7 +36,7 @@ sbt assembly
 Para ejecutar la aplicación, una vez se haya iniciado Docker:
 ```bash
 docker image build -t bach-machine:latest .
-docker run bach-machine:latest
+docker run -p 8080:8080 -e PORT=8080 bach-machine:latest
 ```
 Con el contenedor ejecutándose, podemos enviar peticiones al servidor usando:
 ```bash
