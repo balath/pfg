@@ -9,9 +9,9 @@ armónica de un coral.
 
 ### ¿Qué?
 Bach-machine es un generador de corales en el estilo de Johann Sebastian Bach, que muestrea la estructura armónica
-de una pieza de estilo coral a partir en un modelo probabilista basado en cadenas de Markov, para después armonizar a 4
+de una pieza de estilo coral a partir de un modelo probabilista basado en cadenas de Markov, para después armonizar a 4
 voces esta estructura mediante un algoritmo de búsqueda, sin añadir ornamentación. La aplicación se utiliza mediante un 
-servidor http que sirve las piezas corales generadas a raíz de una petición para una tonalidad dada. 
+[servidor http](src/main/scala/GeneratorService.scala) que sirve las piezas corales generadas a raíz de una petición para una tonalidad dada. 
 
 Su estructura básica se configura con seis componentes:
 
